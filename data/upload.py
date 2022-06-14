@@ -4,12 +4,8 @@ import tools.pymysql as mysql
 import os
 
 
-def upload_to_rds():
-    # upload a csv folder containing the training data for the day
-    folder = askdirectory(title='Which folder are we uploading?') # select the csv data folder
-    print(folder)
-    date = os.path.basename(folder)
-
+def upload_to_rds(path):
+    # upload a csv file containing the training data
     
 
     # Creating connection

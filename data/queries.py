@@ -1,3 +1,3 @@
-def check_date(date, mouse_code):
+def check_date(date, mouse_code, cursor):
     # TODO query if an entry of a trial exists using the composite primary key
     pass
