@@ -4,8 +4,8 @@ import tools.pymysql as mysql
 import os
 
 
-def upload_to_rds(path):
-    # upload a csv file containing the training data
+def upload_to_rds():
+    # upload a dataframe containing the training data
     
 
     # Creating connection

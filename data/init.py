@@ -1,5 +1,4 @@
 # initilzes the tables needed by us
-from msilib.schema import CreateFolder
 import tools.pymysql as mysql
 
 # Creating connection
@@ -18,7 +17,7 @@ if not ('mice',) in tables:
     db.commit()
 
 if not ('mouse_trial',) in tables:
-    create_mouse_trial = "CREATE TABLE mouse_trial(mouse_code VARCHAR(255), date DATE, prob_set integer, trial_num integer, reward_num integer, nan_trial_num integer);"
+    create_mouse_trial = "CREATE TABLE mouse_trial(mouse_code VARCHAR(255), date DATE, prob_set integer, trial_num integer, reward_num integer, nan_trial_num integer, training boolean, motor_training boolean);"
     cursor.execute(create_mouse_trial)
     db.commit()
 
