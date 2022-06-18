@@ -11,8 +11,13 @@ def add_column(table_name, column_name, data_type):
         ADD %s %s''' % (table_name, column_name, data_type)
     return query
 
-# !!!!! be careful with this command!!!
+#----------------------------------------- DANGER ZONE ----------------------------------------#
 def delete_table(table_name):
     query = '''
     DROP TABLE %s''' % table_name
+    return query
+
+def delete_all():
+    query = '''
+    DROP TABLE  mice, sessions, trials'''
     return query
