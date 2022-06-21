@@ -1,12 +1,12 @@
 # Fdb version 3
-["bibtex skeleton"] 1655803689 "skeleton.aux" "skeleton.bbl" "skeleton" 1655803693
-  "c:/texlive/2022/texmf-dist/bibtex/bst/base/plain.bst" 1655736968 20613 bd3fbfa9f64872b81ac57a0dd2ed855f ""
+["bibtex skeleton"] 1655804947 "skeleton.aux" "skeleton.bbl" "skeleton" 1655804951
+  "c:/texlive/2022/texmf-dist/bibtex/bst/base/apalike.bst" 1655736968 24635 604dafcc79f521a11ea73e506e1fbd98 ""
   "mybibfile.bib" 1655735581 547 8c016d9a1a083bbaf3b3b797b9375452 ""
-  "skeleton.aux" 1655803692 1720 e0e837d31bfda4b9638d0af6afc97b63 "pdflatex"
+  "skeleton.aux" 1655804950 1756 0bbf1880612c47a57bab9db936104dfb "pdflatex"
   (generated)
   "skeleton.bbl"
   "skeleton.blg"
-["pdflatex"] 1655803690 "d:/Dissertation/Essay/skeleton.tex" "skeleton.pdf" "skeleton" 1655803693
+["pdflatex"] 1655804948 "d:/Dissertation/Essay/skeleton.tex" "skeleton.pdf" "skeleton" 1655804951
   "c:/texlive/2022/texmf-dist/fonts/enc/dvips/base/8r.enc" 1655737499 4850 80dc9bab7f31fb78a000ccfed0e27cab ""
   "c:/texlive/2022/texmf-dist/fonts/map/fontname/texfonts.map" 1655737775 3524 cb3e574dea2d1052e39280babc910dc8 ""
   "c:/texlive/2022/texmf-dist/fonts/tfm/adobe/helvetic/phvb7t.tfm" 1655738006 2240 eb56c13537f4d8a0bd3fafc25572b1bd ""
@@ -89,14 +89,14 @@
   "c:/texlive/2022/texmf-var/fonts/map/pdftex/updmap/pdftex.map" 1655743953 4628057 1230c9ff463314e58cdc6fb8d990e1df ""
   "c:/texlive/2022/texmf-var/web2c/pdftex/pdflatex.fmt" 1655758335 2863885 e994a6124e0c1ad9704fa858ded6a008 ""
   "c:/texlive/2022/texmf.cnf" 1655743919 895 19c205bb6e23ea7f5cbd028884930c53 ""
-  "d:/Dissertation/Essay/skeleton.tex" 1655735581 7265 f0cf4a09a0f68d10970dfa22e5b1733d ""
+  "d:/Dissertation/Essay/skeleton.tex" 1655804939 7295 d19fe77feb3126ccfbea16ba2ae4b0f0 ""
   "eushield-normal.pdf" 1655735581 26561 461664f1e86e3692d274d2f967a785e1 ""
   "eushield.sty" 1655735581 1493 1ab6df5e08d7ba83c21cc6b1c6e8fc04 ""
   "infthesis.cls" 1655735581 25061 2c6fef786f35a1561ca3de52804e6857 ""
-  "skeleton.aux" 1655803692 1720 e0e837d31bfda4b9638d0af6afc97b63 "pdflatex"
-  "skeleton.bbl" 1655803690 394 ebc988f158468600ae589609cdddf050 "bibtex skeleton"
-  "skeleton.tex" 1655735581 7265 f0cf4a09a0f68d10970dfa22e5b1733d ""
-  "skeleton.toc" 1655803692 683 665ae9e3c34abea3d9f84fcd0704eb34 "pdflatex"
+  "skeleton.aux" 1655804950 1756 0bbf1880612c47a57bab9db936104dfb "pdflatex"
+  "skeleton.bbl" 1655804948 425 466ac02aadd12c836a5669e51b4a6aac "bibtex skeleton"
+  "skeleton.tex" 1655804939 7295 d19fe77feb3126ccfbea16ba2ae4b0f0 ""
+  "skeleton.toc" 1655804950 683 665ae9e3c34abea3d9f84fcd0704eb34 "pdflatex"
   "ugcheck.sty" 1655735581 3107 5635d876f7cc2d71c66ecbb589951f0c ""
   (generated)
   "skeleton.aux"
