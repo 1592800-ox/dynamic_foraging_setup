@@ -2,7 +2,7 @@ from matplotlib import table
 import numpy as np
 from numpy.typing import NDArray
 import pandas as pd
-import tools.pymysql as mysql
+import database.tools.pymysql as mysql
 
 # initializes the tables
 def init(cursor: mysql.connections.Cursor):
