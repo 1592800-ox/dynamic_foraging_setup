@@ -25,7 +25,6 @@ trial_indices = []
 rewarded = []
 reaction_time = []
 moving_speed = []
-block = Block_UI()
 pygame.mixer.init(4096)
 # choice made in a trial, left is 0 and right is 1
 choice = 0
@@ -64,6 +63,8 @@ fig, axes = plt.subplots(2, 1, figsize=(16, 8))
 pump = pump_ctrl.Pump(OUT_REWARD)
 
 mouse_code, motor_train, train = setup(pump)
+
+block = Block_UI()
 
 def callback_rise(callback):
     global partial_left, partial_right
