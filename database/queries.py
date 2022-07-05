@@ -2,8 +2,24 @@ from matplotlib import table
 import numpy as np
 from numpy.typing import NDArray
 import pandas as pd
-import database.tools.pymysql as mysql
+import tools.pymysql as mysql
 
+# initializes the tables
+def init(cursor: mysql.connections.Cursor):
+    cursor.execute("SHOW TABLES")
+    tables = cursor.fetchall()
+
+    if not ('mice',) in tables:
+        create_mice = "CREATE TABLE mice(mouse_code VARCHAR(255), date_of_birth DATE, trained boolean, trained_date DATE, dementia boolean);"
+        cursor.execute(create_mice)
+
+    if not ('sessions',) in tables:
+        create_mouse_trial = "CREATE TABLE sessions(mouse_code VARCHAR(255), date DATE, prob_set integer, trial_num integer, reward_num integer, nan_trial_num integer, training boolean, motor_training boolean,  CONSTRAINT session_id PRIMARY KEY (mouse_code, date));"
+        cursor.execute(create_mouse_trial)
+
+    if not ('trials',) in tables:
+        create_trials = "CREATE TABLE trials(mouse_code VARCHAR(255), date DATE, trial_indices integer, left_P double, right_P double, rewarded boolean, reaction_time double, moving_speed double, CONSTRAINT session_id PRIMARY KEY (mouse_code, date))"
+        cursor.execute(create_trials)
 
 #------------------------------ UPLOAD DATA --------------------------------------------------#
 def upload_to_session(mouse_code, date, prob_set: int, choices: NDArray, rewarded: NDArray, trial_ind: NDArray, training: bool, motor_training: bool, cursor: mysql.connections.Cursor):

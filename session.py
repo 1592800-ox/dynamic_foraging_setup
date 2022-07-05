@@ -2,16 +2,15 @@ from time import sleep
 from time import perf_counter
 import collections
 import pandas as pd
-from dynamic_foraging_GanJianLab.modules import mice_ui
-from dynamic_foraging_GanJianLab.modules import pump_ctrl
-from dynamic_foraging_GanJianLab.modules.monitor import monitor_train
-from dynamic_foraging_GanJianLab.modules.setup import setup
+from hardware.modules.mice_ui import Block_UI
+import hardware.modules.mice_ui as mice_ui
+import hardware.modules.pump_ctrl as pump_ctrl
+from analysis.monitor import monitor_train
+from hardware.modules.setup import setup
 from database.upload import upload_to_rds
 from tkinter import *
-import argparse
 import numpy as np
 import RPi.GPIO as GPIO
-from functools import partial
 import pygame
 
 
@@ -23,8 +22,9 @@ left_P = []
 right_P = []
 trial_indices = []
 rewarded = []
-
-block = mice_ui.Block_UI()
+reaction_time = []
+moving_speed = []
+block = Block_UI()
 pygame.mixer.init(4096)
 # choice made in a trial, left is 0 and right is 1
 choice = 0
@@ -34,6 +34,8 @@ adv = 0
 trial_ind = 0
 # number of movement in trial interval, used to determine whether the trial should start
 movement = 0
+# number of movement during a trial
+trial_movement = 0
 # Control a mice session with loaded probability file 
 IN_A = 17
 IN_B = 5
@@ -44,6 +46,7 @@ OUT_REWARD = 26
 TIME_OUT = 7
 # Flag indicating whether we are in the middle of a trial or not
 in_trial = False
+# ensure only one choice is stored
 choice_made = False
 partial_left = False
 partial_right = False
@@ -70,13 +73,15 @@ def callback_rise(callback):
 
 # callback functions for GPIO
 def callback(callback):
-    global in_trial, choice, movement, partial_left, choice_made, partial_right
+    global in_trial, choice, movement, trial_movement, partial_left, choice_made, partial_right
 
     if GPIO.input(IN_B) and partial_right:
         # B is leading
         if in_trial:
             if not choice_made:
+                trial_movement += 1
                 if block.update_right(in_trial):
+                    in_trial = False
                     print('chose right')
                     # chose left
                     choice = 1
@@ -87,6 +92,7 @@ def callback(callback):
         if in_trial:
             if not choice_made:
                 if block.update_left(in_trial):
+                    in_trial = False
                     print('chose left')
                     # chose right
                     choice = 0
@@ -158,11 +164,13 @@ if train or motor_train:
         choice = -1
         in_trial = True
         choice_made = False
+        trial_movement = 0
         print('trial starts')
         # Trial continues until the mouse made a choice or timeout
         while in_trial:
             if choice != -1:
                 print('choice made')
+                reaction_time.append(perf_counter() - start_time)
                 if np.random.binomial(1, reward_prob[choice]):
                     # if given reward
                     pump.send_reward()
@@ -172,21 +180,27 @@ if train or motor_train:
                     rewarded.append(0)
                 # chosen the advantageous side
                 last_twenty.append(adv == choice)
-                in_trial = False
                 block.reset()
                 break
             block.draw()
             if perf_counter() - start_time > TIME_OUT:
+                # no reward for nan trials either
                 rewarded.append(0)
+                reaction_time.append(-1)
                 in_trial = False
                 block.reset()
                 block.window.fill(mice_ui.BG_COLOR)
                 pygame.display.flip()
                 break
+        moving_speed.append(trial_movement)
         block.reset()
         # store trial data
         add_trial()
-        # WE ARE ADDING NAN TRIALS FOR NOW
+        # TODO WE ARE ADDING NAN TRIALS FOR NOW
+        left_P.append(reward_prob[0])
+        right_P.append(reward_prob[1])
+        trial_indices.append(trial_ind)
+        choices.append(choice)
         # next trial
         trial_ind += 1
         # TODO finish training monitoring
@@ -195,5 +209,5 @@ else:
     pass
 
 # TODO creates csv files using pandas dataframe
-#data = pd.DataFrame()
-#upload_to_rds(data=data, mouse_code=0, training=train, motor_training=motor_train)
+data = pd.DataFrame(list(zip(trial_indices, left_P, right_P, choices, rewarded)), columns=['trial_indices', 'left_P', 'right_P', 'choices', 'rewarded'])
+upload_to_rds(data=data, mouse_code=0, training=train, motor_training=motor_train)
