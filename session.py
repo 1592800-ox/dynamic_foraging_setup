@@ -2,6 +2,7 @@ from time import sleep
 from time import perf_counter
 import collections
 import pandas as pd
+import matplotlib.pyplot as plt
 from hardware.modules.mice_ui import Block_UI
 import hardware.modules.mice_ui as mice_ui
 import hardware.modules.pump_ctrl as pump_ctrl
@@ -17,7 +18,7 @@ import pygame
 # variables storing trial data
 MOTOR_REWARD =  0.9
 reward_prob = np.array([0.9, 0.9])
-choices = []
+choices = np.array([])
 left_P = []
 right_P = []
 trial_indices = []
@@ -57,6 +58,8 @@ GPIO.setup(IN_A, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
 GPIO.setup(IN_A_FALL, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
 GPIO.setup(IN_B, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
 GPIO.setup(OUT_REWARD, GPIO.OUT, initial=GPIO.LOW)
+
+fig, axes = plt.subplots(2, 1, figsize=(16, 8))
 
 pump = pump_ctrl.Pump(OUT_REWARD)
 
@@ -179,7 +182,7 @@ if train or motor_train:
                 else:
                     rewarded.append(0)
                 # chosen the advantageous side
-                last_twenty.append(adv == choice)
+                last_twenty.append(int(adv == choice))
                 block.reset()
                 break
             block.draw()
@@ -187,6 +190,7 @@ if train or motor_train:
                 # no reward for nan trials either
                 rewarded.append(0)
                 reaction_time.append(-1)
+                last_twenty.append(0)
                 in_trial = False
                 block.reset()
                 block.window.fill(mice_ui.BG_COLOR)
@@ -204,7 +208,8 @@ if train or motor_train:
         # next trial
         trial_ind += 1
         # TODO finish training monitoring
-        #monitor_train(left_P, right_P, trial_indices, choices, rewarded)
+        monitor_train(left_P, right_P, trial_indices, choices, rewarded, axes)
+        plt.show()
 else:
     pass
 
