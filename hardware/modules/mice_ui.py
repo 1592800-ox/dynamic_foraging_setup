@@ -14,8 +14,8 @@ class Block_UI:
     def __init__(self) -> None:
         pygame.init()
         # monitor
-        self.m = get_monitors()[0]
-        self.window = pygame.display.set_mode((self.m.width, self.m.height), pygame.FULLSCREEN)
+        self.m = get_monitors()[1]
+        self.window = pygame.display.set_mode((self.m.width, self.m.height), pygame.FULLSCREEN, display=1)
         self.window.fill((BG_COLOR))
         pygame.display.flip()
         self.rec_width = self.m.width / 5

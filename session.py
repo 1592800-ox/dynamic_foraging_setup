@@ -6,10 +6,10 @@ import matplotlib.pyplot as plt
 from hardware.modules.mice_ui import Block_UI
 import hardware.modules.mice_ui as mice_ui
 import hardware.modules.pump_ctrl as pump_ctrl
-from analysis.monitor import monitor_train
+#from analysis.monitor import monitor_train
+import seaborn as sns
 from hardware.modules.setup import setup
 from database.upload import upload_to_rds
-from tkinter import *
 import numpy as np
 import RPi.GPIO as GPIO
 import pygame
@@ -22,7 +22,7 @@ choices = np.array([])
 left_P = []
 right_P = []
 trial_indices = []
-rewarded = []
+rewarded = np.array([])
 reaction_time = []
 moving_speed = []
 pygame.mixer.init(4096)
@@ -61,8 +61,11 @@ GPIO.setup(OUT_REWARD, GPIO.OUT, initial=GPIO.LOW)
 fig, axes = plt.subplots(2, 1, figsize=(16, 8))
 
 pump = pump_ctrl.Pump(OUT_REWARD)
-
+print('start setup')
 mouse_code, motor_train, train = setup(pump)
+print('finished setup')
+
+train = True
 
 block = Block_UI()
 
@@ -85,7 +88,7 @@ def callback(callback):
             if not choice_made:
                 trial_movement += 1
                 if block.update_right(in_trial):
-                    in_trial = False
+                    #in_trial = False
                     print('chose right')
                     # chose left
                     choice = 1
@@ -96,7 +99,7 @@ def callback(callback):
         if in_trial:
             if not choice_made:
                 if block.update_left(in_trial):
-                    in_trial = False
+                    #in_trial = False
                     print('chose left')
                     # chose right
                     choice = 0
@@ -109,23 +112,66 @@ def callback(callback):
 GPIO.add_event_detect(IN_A, GPIO.RISING, callback=callback_rise) 
 GPIO.add_event_detect(IN_A_FALL, GPIO.FALLING, callback=callback) 
 
+print('added event detection')
+
 ############################ Utilities ##########################
+
+def monitor_train():
+    global left_p, right_p, fig, axes, trial_indices, choices, rewarded
+    left_rewarded = np.array([])
+    left_unrewarded = np.array([])
+    right_rewarded = np.array([])
+    right_unrewarded = np.array([])
+    # choose left and get rewarded, 0 for left in choices, -1 for nan trials
+    if (choices == 0).size > 0:
+        if (rewarded == 1).size > 0:
+            left_rewarded = np.where((choices == 0) & (rewarded == 1))[0]
+        if (rewarded == 1).size > 0:
+            left_unrewarded = np.where((choices == 0) & (rewarded == 0))[0]
+    if (choices == 1).size > 0:
+        if (rewarded == 1).size > 0:
+            right_rewarded = np.where((choices == 1) & (rewarded == 1))[0]
+        if (rewarded == 1).size > 0:
+            right_unrewarded = np.where((choices == 1) & (rewarded == 0))[0]
+
+    if left_rewarded.size > 0:
+        axes[0].plot([left_rewarded], 1.1, marker='o', color='c')
+    if left_unrewarded.size > 0:
+        axes[0].plot([left_unrewarded], 1.2, marker='x', color='m')
+    if right_rewarded.size > 0:
+        axes[1].plot([right_rewarded], 1.1, marker='o', color='c')
+    if right_unrewarded.size > 0:
+        axes[1].plot([right_unrewarded], 1.2, marker='x', color='m')
+
+    choices_left = choices
+    choices_right = choices
+    choices_left[choices==0] = 1
+    choices_left[choices!=0] = 0
+    choices_right[choices==1] = 1
+    choices_right[choices!=1] = 0 
+    print(choices_left)
+    print(choices_right)
+    print(trial_indices) 
+    if choices.size > 5:  
+        if choices_left.size > 0:
+            choices_left = np.convolve(choices_left, np.ones(5), 'same') / 5
+            print(choices_left)
+            sns.lineplot(x=trial_indices, y=choices_left, ax=axes[0], color='black')
+        if choices_right.size > 0:
+            choices_right = np.convolve(choices_right, np.ones(5), 'same') / 5
+            print(choices_right)
+            sns.lineplot(x=trial_indices, y=choices_right, ax=axes[1], color='black')
+
+    sns.lineplot(x=trial_indices, y = left_P, color='blue', ax=axes[0])
+    sns.lineplot(x=trial_indices, y = right_P, color='blue', ax=axes[1])
+
+
 def add_trial():
+    global trial_indices, trial_ind, reward_prob, left_P, right_P, choices, choice
     trial_indices.append(trial_ind)
     left_P.append(reward_prob[0])
     right_P.append(reward_prob[1])
-    if choice == 0:
-        choices.append(np.nan)
-    else:
-        choices.append(choice)
-
-
-# quick pulse to the pump
-def send_reward(pin):
-    print('reward sent to %d' % (OUT_REWARD))
-    GPIO.output(pin, GPIO.HIGH)
-    sleep(0.5)
-    GPIO.output(pin, GPIO.LOW)
+    choices = np.append(choices, choice)
 
 if motor_train:
     print('motor training')
@@ -138,11 +184,13 @@ else:
     reward_prob[abs(1-adv)] = 1 - reward_prob[adv]
 
 if train or motor_train:
+    print('trianing starts')
     # percentage of the animal choosing the more advantagous side in the past twenty trials
     last_twenty = collections.deque(20*[0], 20)
     
     # trial continues until stopped
     while True:
+        print(reward_prob)
         # stop the system bring up not responding window
         pygame.event.pump()
         # random trial interval
@@ -178,18 +226,19 @@ if train or motor_train:
                 if np.random.binomial(1, reward_prob[choice]):
                     # if given reward
                     pump.send_reward()
-                    rewarded.append(1)
+                    rewarded = np.append(rewarded, 1)
                     print('rewarded')
                 else:
-                    rewarded.append(0)
+                    rewarded = np.append(rewarded, 0)
                 # chosen the advantageous side
                 last_twenty.append(int(adv == choice))
                 block.reset()
+                in_trial = False
                 break
             block.draw()
             if perf_counter() - start_time > TIME_OUT:
                 # no reward for nan trials either
-                rewarded.append(0)
+                rewarded = np.append(rewarded, 0)
                 reaction_time.append(-1)
                 last_twenty.append(0)
                 in_trial = False
@@ -201,19 +250,17 @@ if train or motor_train:
         block.reset()
         # store trial data
         add_trial()
-        # TODO WE ARE ADDING NAN TRIALS FOR NOW
-        left_P.append(reward_prob[0])
-        right_P.append(reward_prob[1])
-        trial_indices.append(trial_ind)
-        choices.append(choice)
         # next trial
         trial_ind += 1
         # TODO finish training monitoring
-        monitor_train(left_P, right_P, trial_indices, choices, rewarded, axes)
-        plt.show()
+        monitor_train()
+        plt.show(block=False)
+        plt.pause(1)
 else:
     pass
 
 # TODO creates csv files using pandas dataframe
 data = pd.DataFrame(list(zip(trial_indices, left_P, right_P, choices, rewarded)), columns=['trial_indices', 'left_P', 'right_P', 'choices', 'rewarded'])
-upload_to_rds(data=data, mouse_code=0, training=train, motor_training=motor_train)
+# upload_to_rds(data=data, mouse_code=0, training=train, motor_training=motor_train)
+
+plt.show()
