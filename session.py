@@ -9,7 +9,6 @@ import hardware.modules.pump_ctrl as pump_ctrl
 #from analysis.monitor import monitor_train
 import seaborn as sns
 from hardware.modules.setup import setup
-from database.upload import upload_to_rds
 import numpy as np
 import RPi.GPIO as GPIO
 import pygame
