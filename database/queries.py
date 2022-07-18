@@ -2,7 +2,7 @@ from matplotlib import table
 import numpy as np
 from numpy.typing import NDArray
 import pandas as pd
-import database.tools.pymysql as mysql
+import tools.pymysql as mysql
 
 # initializes the tables
 def init(cursor: mysql.connections.Cursor):
@@ -18,18 +18,17 @@ def init(cursor: mysql.connections.Cursor):
         cursor.execute(create_mouse_trial)
 
     if not ('trials',) in tables:
-        create_trials = "CREATE TABLE trials(mouse_code VARCHAR(255), date DATE, trial_indices integer, left_P double, right_P double, rewarded boolean, reaction_time double, moving_speed double, CONSTRAINT session_id PRIMARY KEY (mouse_code, date))"
+        create_trials = "CREATE TABLE trials(mouse_code VARCHAR(255), date DATE, trial_indices integer, left_P double, right_P double, rewarded integer, reaction_time double, moving_speed double, CONSTRAINT session_id PRIMARY KEY (mouse_code, date))"
         cursor.execute(create_trials)
 
 #------------------------------ UPLOAD DATA --------------------------------------------------#
-def upload_to_session(mouse_code, date, prob_set: int, choices: NDArray, rewarded: NDArray, trial_ind: NDArray, training: bool, motor_training: bool, cursor: mysql.connections.Cursor):
+def upload_to_session(mouse_code, date, prob_set: int, choices: NDArray, rewarded: NDArray, training: bool, motor_training: bool, cursor: mysql.connections.Cursor):
     # TODO add session to sessions
     session_query = '''
     INSERT INTO sessions(mouse_code, date, prob_set, trial_num, reward_num, nan_trial_num, training, motor_training) VALUES (%s, %s, %d, %d, %d, %d, %b, %b)
     ''' % (mouse_code, date, prob_set, len(choices), len(rewarded[rewarded==1]), len(choices[choices==-1]), training, motor_training)
 
     cursor.execute(session_query)
-    # TODO add trials to the trials table
     
     
 

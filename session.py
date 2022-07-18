@@ -9,7 +9,6 @@ import hardware.modules.pump_ctrl as pump_ctrl
 from analysis.monitor import monitor_train
 from hardware.modules.setup import setup
 from database.upload import upload_to_rds
-from tkinter import *
 import numpy as np
 import RPi.GPIO as GPIO
 import pygame
@@ -214,6 +213,7 @@ if train or motor_train:
 else:
     pass
 
+plt.show()
 # TODO creates csv files using pandas dataframe
 data = pd.DataFrame(list(zip(trial_indices, left_P, right_P, choices, rewarded)), columns=['trial_indices', 'left_P', 'right_P', 'choices', 'rewarded'])
 upload_to_rds(data=data, mouse_code=0, training=train, motor_training=motor_train)
