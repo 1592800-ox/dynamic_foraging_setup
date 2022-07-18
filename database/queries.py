@@ -22,7 +22,7 @@ def init(cursor: mysql.connections.Cursor):
         cursor.execute(create_trials)
 
 #------------------------------ UPLOAD DATA --------------------------------------------------#
-def upload_to_session(mouse_code, date, prob_set: int, choices: NDArray, rewarded: NDArray, training: bool, motor_training: bool, cursor: mysql.connections.Cursor):
+def upload_session(mouse_code, date, prob_set: int, choices: NDArray, rewarded: NDArray, training: bool, motor_training: bool, trial_indices, left_P, right_P, reaction_time, moving_speed, cursor: mysql.connections.Cursor):
     # TODO add session to sessions
     session_query = '''
     INSERT INTO sessions(mouse_code, date, prob_set, trial_num, reward_num, nan_trial_num, training, motor_training) VALUES (%s, %s, %d, %d, %d, %d, %b, %b)
@@ -30,6 +30,8 @@ def upload_to_session(mouse_code, date, prob_set: int, choices: NDArray, rewarde
 
     cursor.execute(session_query)
     
+    #TODO upload to trials:
+    trial_num = len(trial_indices)
     
 
 #-------------------------------- TABLE MODIFICATION -----------------------------------------#
