@@ -53,5 +53,5 @@ def monitor_train(left_p, right_p, fig, axes, trial_indices, choices, rewarded):
             print(choices_right)
             sns.lineplot(x=trial_indices, y=choices_right, ax=axes[1], color='black')
 
-    sns.lineplot(x=trial_indices, y = left_P, color='blue', ax=axes[0])
-    sns.lineplot(x=trial_indices, y = right_P, color='blue', ax=axes[1])
+    sns.lineplot(x=trial_indices, y = left_p, color='blue', ax=axes[0])
+    sns.lineplot(x=trial_indices, y = right_p, color='blue', ax=axes[1])
