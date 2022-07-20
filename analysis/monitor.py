@@ -6,6 +6,8 @@ import seaborn as sns
 
 # TODO test if the Axes object are the same as the ones initialized by plt.subplots
 def monitor_train(left_p, right_p, fig, axes, trial_indices, choices, rewarded):
+    axes[0].clear()
+    axes[1].clear()
     choices = np.array(choices)
     rewarded = np.array(rewarded)
 
@@ -34,12 +36,12 @@ def monitor_train(left_p, right_p, fig, axes, trial_indices, choices, rewarded):
     if right_unrewarded.size > 0:
         axes[1].plot([right_unrewarded], 1.2, marker='x', color='m')
 
-    choices_left = choices
-    choices_right = choices
-    choices_left[choices==0] = 1
-    choices_left[choices!=0] = 0
-    choices_right[choices==1] = 1
-    choices_right[choices!=1] = 0 
+    print(rewarded)
+    print(choices)
+    choices_left = choices == 0
+    choices_right = choices == 1
+    choices_left.astype(int)
+    choices_right.astype(int)
     print(choices_left)
     print(choices_right)
     print(trial_indices) 

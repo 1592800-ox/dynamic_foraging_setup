@@ -1,3 +1,6 @@
+# avoiding dsp issue for now
+import os
+os.environ['SDL_AUDIODRIVER'] = 'dsp'
 from time import sleep
 from time import perf_counter
 import collections
@@ -5,14 +8,16 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from hardware.modules.mice_ui import Block_UI
 import hardware.modules.mice_ui as mice_ui
-import hardware.modules.pump_ctrl as pump_ctrl
+from hardware.modules.pump_ctrl import Pump
 #from analysis.monitor import monitor_train
 import seaborn as sns
 from hardware.modules.setup import setup
 import numpy as np
 import RPi.GPIO as GPIO
 import pygame
-
+from database.queries import upload_session
+import database.tools.pymysql as mysql
+import database.queries
 from analysis.monitor import monitor_train
 
 
@@ -26,7 +31,6 @@ trial_indices = []
 rewarded = []
 reaction_time = []
 moving_speed = []
-pygame.mixer.init(4096)
 # choice made in a trial, left is 0 and right is 1
 choice = 0
 # advantageous side, 1 is right, 0 is left
@@ -43,7 +47,7 @@ IN_B = 5
 IN_A_FALL = 6
 # IN_B_FALL = 26
 OUT_REWARD = 26
-# seconds till a trial times out and we get a NaN trial
+# seconds before a trial times out and we get a NaN trial
 TIME_OUT = 7
 # Flag indicating whether we are in the middle of a trial or not
 in_trial = False
@@ -60,8 +64,9 @@ GPIO.setup(IN_B, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
 GPIO.setup(OUT_REWARD, GPIO.OUT, initial=GPIO.LOW)
 
 fig, axes = plt.subplots(2, 1, figsize=(16, 8))
-
-pump = pump_ctrl.Pump(OUT_REWARD)
+axes[0].set_ylim([-0.1, 1.3])
+axes[1].set_ylim([-0.1, 1.3])
+pump = Pump(OUT_REWARD)
 print('start setup')
 mouse_code, motor_train, train = setup(pump)
 print('finished setup')
@@ -70,6 +75,8 @@ train = True
 
 block = Block_UI()
 
+
+# callback functions for GPIO
 def callback_rise(callback):
     global partial_left, partial_right
 
@@ -79,7 +86,6 @@ def callback_rise(callback):
         partial_left = True
 
 
-# callback functions for GPIO
 def callback(callback):
     global in_trial, choice, movement, trial_movement, partial_left, choice_made, partial_right
 
@@ -115,15 +121,6 @@ GPIO.add_event_detect(IN_A_FALL, GPIO.FALLING, callback=callback)
 
 print('added event detection')
 
-############################ Utilities ##########################
-
-def add_trial():
-    global trial_indices, trial_ind, reward_prob, left_P, right_P, choices, choice
-    trial_indices.append(trial_ind)
-    left_P.append(reward_prob[0])
-    right_P.append(reward_prob[1])
-    choices = np.append(choices, choice)
-
 if motor_train:
     print('motor training')
     # reward prob for motor training
@@ -148,7 +145,8 @@ if train or motor_train:
         sleep(np.random.randint(1, 4))
 
         # TODO: test adjusting reward_prob based on past performance
-        if not motor_train and sum(collections.Counter(last_twenty)) > 17:
+        if not motor_train and sum(collections.Counter(last_twenty)) > 5:
+            print('switch prob')
             adv = abs(1 - adv)
             reward_prob[adv] = np.random.uniform(low=0.85, high=0.95, size=1)
             reward_prob[abs(1-adv)] = 1 - reward_prob[adv]
@@ -177,10 +175,10 @@ if train or motor_train:
                 if np.random.binomial(1, reward_prob[choice]):
                     # if given reward
                     pump.send_reward()
-                    rewarded = np.append(rewarded, 1)
+                    rewarded.append(1)
                     print('rewarded')
                 else:
-                    rewarded = np.append(rewarded, 0)
+                    rewarded.append(0)
                 # chosen the advantageous side
                 last_twenty.append(int(adv == choice))
                 block.reset()
@@ -189,7 +187,7 @@ if train or motor_train:
             block.draw()
             if perf_counter() - start_time > TIME_OUT:
                 # no reward for nan trials either
-                rewarded = np.append(rewarded, 0)
+                rewarded.append(0)
                 reaction_time.append(-1)
                 last_twenty.append(0)
                 in_trial = False
@@ -200,16 +198,21 @@ if train or motor_train:
         moving_speed.append(trial_movement)
         block.reset()
         # store trial data
-        add_trial()
+        trial_indices.append(trial_ind)
+        left_P.append(reward_prob[0])
+        right_P.append(reward_prob[1])
+        choices.append(choice)
+        print(last_twenty)
         # next trial
         trial_ind += 1
         # TODO finish training monitoring
-        monitor_train()
+        monitor_train(left_p=left_P, right_p=right_P, fig=fig, axes=axes, trial_indices=trial_indices, choices=choices, rewarded=rewarded)
         plt.show(block=False)
         plt.pause(1)
 else:
     pass
 
-plt.show()
-
-# upload_to_rds(data=data, mouse_code=0, training=train, motor_training=motor_train)
+# TODO add database upload, try and except
+# Creating connection
+db = mysql.connect(host='dynamic-foraging.cqmwfsljtplu.eu-west-2.rds.amazonaws.com', user='admin', password='Luph65588590-', port=3306, db='dynamic_foraging_data')
+cursor = db.cursor()
