@@ -13,15 +13,17 @@ import numpy as np
 import RPi.GPIO as GPIO
 import pygame
 
+from analysis.monitor import monitor_train
+
 
 # variables storing trial data
 MOTOR_REWARD =  0.9
 reward_prob = np.array([0.9, 0.9])
-choices = np.array([])
+choices = []
 left_P = []
 right_P = []
 trial_indices = []
-rewarded = np.array([])
+rewarded = []
 reaction_time = []
 moving_speed = []
 pygame.mixer.init(4096)
@@ -114,56 +116,6 @@ GPIO.add_event_detect(IN_A_FALL, GPIO.FALLING, callback=callback)
 print('added event detection')
 
 ############################ Utilities ##########################
-
-def monitor_train():
-    global left_p, right_p, fig, axes, trial_indices, choices, rewarded
-    left_rewarded = np.array([])
-    left_unrewarded = np.array([])
-    right_rewarded = np.array([])
-    right_unrewarded = np.array([])
-    # choose left and get rewarded, 0 for left in choices, -1 for nan trials
-    if (choices == 0).size > 0:
-        if (rewarded == 1).size > 0:
-            left_rewarded = np.where((choices == 0) & (rewarded == 1))[0]
-        if (rewarded == 1).size > 0:
-            left_unrewarded = np.where((choices == 0) & (rewarded == 0))[0]
-    if (choices == 1).size > 0:
-        if (rewarded == 1).size > 0:
-            right_rewarded = np.where((choices == 1) & (rewarded == 1))[0]
-        if (rewarded == 1).size > 0:
-            right_unrewarded = np.where((choices == 1) & (rewarded == 0))[0]
-
-    if left_rewarded.size > 0:
-        axes[0].plot([left_rewarded], 1.1, marker='o', color='c')
-    if left_unrewarded.size > 0:
-        axes[0].plot([left_unrewarded], 1.2, marker='x', color='m')
-    if right_rewarded.size > 0:
-        axes[1].plot([right_rewarded], 1.1, marker='o', color='c')
-    if right_unrewarded.size > 0:
-        axes[1].plot([right_unrewarded], 1.2, marker='x', color='m')
-
-    choices_left = choices
-    choices_right = choices
-    choices_left[choices==0] = 1
-    choices_left[choices!=0] = 0
-    choices_right[choices==1] = 1
-    choices_right[choices!=1] = 0 
-    print(choices_left)
-    print(choices_right)
-    print(trial_indices) 
-    if choices.size > 5:  
-        if choices_left.size > 0:
-            choices_left = np.convolve(choices_left, np.ones(5), 'same') / 5
-            print(choices_left)
-            sns.lineplot(x=trial_indices, y=choices_left, ax=axes[0], color='black')
-        if choices_right.size > 0:
-            choices_right = np.convolve(choices_right, np.ones(5), 'same') / 5
-            print(choices_right)
-            sns.lineplot(x=trial_indices, y=choices_right, ax=axes[1], color='black')
-
-    sns.lineplot(x=trial_indices, y = left_P, color='blue', ax=axes[0])
-    sns.lineplot(x=trial_indices, y = right_P, color='blue', ax=axes[1])
-
 
 def add_trial():
     global trial_indices, trial_ind, reward_prob, left_P, right_P, choices, choice
@@ -259,8 +211,5 @@ else:
     pass
 
 plt.show()
-# TODO creates csv files using pandas dataframe
-data = pd.DataFrame(list(zip(trial_indices, left_P, right_P, choices, rewarded)), columns=['trial_indices', 'left_P', 'right_P', 'choices', 'rewarded'])
-# upload_to_rds(data=data, mouse_code=0, training=train, motor_training=motor_train)
 
-plt.show()
+# upload_to_rds(data=data, mouse_code=0, training=train, motor_training=motor_train)

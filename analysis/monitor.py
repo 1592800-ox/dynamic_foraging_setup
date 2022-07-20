@@ -5,31 +5,53 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 # TODO test if the Axes object are the same as the ones initialized by plt.subplots
-def monitor_train(left_p, right_p, trial_indices, choices, rewarded, fig, ax: plt.Axes):
+def monitor_train(left_p, right_p, fig, axes, trial_indices, choices, rewarded):
+    choices = np.array(choices)
+    rewarded = np.array(rewarded)
+
+    left_rewarded = np.array([])
+    left_unrewarded = np.array([])
+    right_rewarded = np.array([])
+    right_unrewarded = np.array([])
     # choose left and get rewarded, 0 for left in choices, -1 for nan trials
-    left_rewarded = np.where((not choices) and (rewarded))[0]
-    left_unrewarded = np.where((not choices) and (not rewarded))[0]
-    right_rewarded = np.where((choices) and (rewarded))[0]
-    right_unrewarded = np.where((choices) and (not rewarded))[0]
+    if (choices == 0).size > 0:
+        if (rewarded == 1).size > 0:
+            left_rewarded = np.where((choices == 0) & (rewarded == 1))[0]
+        if (rewarded == 1).size > 0:
+            left_unrewarded = np.where((choices == 0) & (rewarded == 0))[0]
+    if (choices == 1).size > 0:
+        if (rewarded == 1).size > 0:
+            right_rewarded = np.where((choices == 1) & (rewarded == 1))[0]
+        if (rewarded == 1).size > 0:
+            right_unrewarded = np.where((choices == 1) & (rewarded == 0))[0]
 
-    if left_rewarded.size != 0:
-        ax[0].plot([left_rewarded], 1.1, marker='o', color='c')
-    if left_unrewarded.size != 0:
-        ax[0].plot([left_unrewarded], 1.2, marker='x', color='m')
-    if right_rewarded.size != 0:
-        ax[1].plot([right_rewarded], 1.1, marker='o', color='c')
-    if right_unrewarded.size != 0:
-        ax[1].plot([right_unrewarded], 1.2, marker='x', color='m')
+    if left_rewarded.size > 0:
+        axes[0].plot([left_rewarded], 1.1, marker='o', color='c')
+    if left_unrewarded.size > 0:
+        axes[0].plot([left_unrewarded], 1.2, marker='x', color='m')
+    if right_rewarded.size > 0:
+        axes[1].plot([right_rewarded], 1.1, marker='o', color='c')
+    if right_unrewarded.size > 0:
+        axes[1].plot([right_unrewarded], 1.2, marker='x', color='m')
 
-    choices_left = (choices==0).astype(int)
-    choices_right = (choices==1).astype(int)
-    if choices_left.size != 0:
-        choices_left = np.convolve(choices_left, np.ones(5), 'same') / 5
-        sns.lineplot(x=trial_indices, y=choices_left, ax=ax[0], c='black')
-    if choices_right.size != 0:
-        choices_right = np.convolve(choices_right, np.ones(5), 'same') / 5
-        sns.lineplot(x=trial_indices, y=choices_right, ax=ax[1], c='black')
+    choices_left = choices
+    choices_right = choices
+    choices_left[choices==0] = 1
+    choices_left[choices!=0] = 0
+    choices_right[choices==1] = 1
+    choices_right[choices!=1] = 0 
+    print(choices_left)
+    print(choices_right)
+    print(trial_indices) 
+    if choices.size > 5:  
+        if choices_left.size > 0:
+            choices_left = np.convolve(choices_left, np.ones(5), 'same') / 5
+            print(choices_left)
+            sns.lineplot(x=trial_indices, y=choices_left, ax=axes[0], color='black')
+        if choices_right.size > 0:
+            choices_right = np.convolve(choices_right, np.ones(5), 'same') / 5
+            print(choices_right)
+            sns.lineplot(x=trial_indices, y=choices_right, ax=axes[1], color='black')
 
-    plt.show(block=False)
-    return ax
-    
+    sns.lineplot(x=trial_indices, y = left_P, color='blue', ax=axes[0])
+    sns.lineplot(x=trial_indices, y = right_P, color='blue', ax=axes[1])

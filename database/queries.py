@@ -32,7 +32,7 @@ def upload_session(mouse_code, date, prob_set: int, choices: NDArray, rewarded: 
     
     #TODO upload to trials:
     trial_num = len(trial_indices)
-    
+    data = pd.DataFrame(list(zip(trial_indices, left_P, right_P, choices, rewarded, reaction_time, moving_speed)), columns=['trial_indices', 'left_P', 'right_P', 'choices', 'rewarded', 'reaction_time', 'moving_speed'])
 
 #-------------------------------- TABLE MODIFICATION -----------------------------------------#
 def check_session_exist(date, mouse_code, cursor: mysql.connections.Cursor):
