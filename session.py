@@ -1,6 +1,5 @@
 # avoiding dsp issue for now
 import os
-os.environ['SDL_AUDIODRIVER'] = 'dsp'
 from time import sleep
 from time import perf_counter
 import collections
@@ -51,7 +50,7 @@ OUT_REWARD = 26
 TIME_OUT = 7
 # Flag indicating whether we are in the middle of a trial or not
 in_trial = False
-# ensure only one choice is stored
+# enure only one choice is stored
 choice_made = False
 partial_left = False
 partial_right = False
@@ -74,6 +73,8 @@ print('finished setup')
 train = True
 
 block = Block_UI()
+pygame.mixer.init()
+beep = pygame.mixer.Sound('beep-07a.wav')
 
 
 # callback functions for GPIO
@@ -145,11 +146,12 @@ if train or motor_train:
         sleep(np.random.randint(1, 4))
 
         # TODO: test adjusting reward_prob based on past performance
-        if not motor_train and sum(collections.Counter(last_twenty)) > 5:
+        if not motor_train and last_twenty.count(1) > 5:
             print('switch prob')
             adv = abs(1 - adv)
             reward_prob[adv] = np.random.uniform(low=0.85, high=0.95, size=1)
             reward_prob[abs(1-adv)] = 1 - reward_prob[adv]
+            last_twenty = collections.deque(20*[0], 20)
 
         # a trial doesn't start until the animal stop moving the wheel for 0.5s
         while True:
@@ -158,7 +160,7 @@ if train or motor_train:
             sleep(0.5)
             if movement < 5:
                 break
-
+        beep.play()
         block.draw()
 
         start_time = perf_counter()
@@ -203,6 +205,7 @@ if train or motor_train:
         right_P.append(reward_prob[1])
         choices.append(choice)
         print(last_twenty)
+        print(sum(collections.Counter(last_twenty)) )
         # next trial
         trial_ind += 1
         # TODO finish training monitoring

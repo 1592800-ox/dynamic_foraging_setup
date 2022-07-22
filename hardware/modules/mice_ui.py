@@ -1,14 +1,15 @@
 import pygame
 from screeninfo import get_monitors
 
-ANGLE_TO_DISTANCE = 1 / 2048
+ANGLE_TO_DISTANCE = 1 / 1024
 WHITE = (255,255,255)
 BLACK = (0,0,0)
 RED = (255,0,0)
 PINE = (105,117,34)
+GREEN = (0,255,0)
 
 BG_COLOR = BLACK
-BLOCK_COLOR = PINE
+BLOCK_COLOR = GREEN
 
 class Block_UI:
     def __init__(self) -> None:
@@ -19,7 +20,7 @@ class Block_UI:
         self.window.fill((BG_COLOR))
         pygame.display.flip()
         self.rec_width = self.m.width / 5
-        self.rec_height = self.m.height / 5
+        self.rec_height = self.m.height / 3
         self.x_pos = self.m.width / 2 - self.rec_width / 2
         self.y_pos = self.m.height / 2 - self.rec_height / 2
         self.rect = pygame.Rect(self.x_pos, self.y_pos, self.rec_width, self.rec_height)
