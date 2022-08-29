@@ -2,17 +2,14 @@ import tkinter as tk
 from hardware.modules import pump_ctrl
 
 def setup(pump: pump_ctrl.Pump):
-    training = False
-    motor_training = False
+    modes = {'motor_training', 'training_1', 'training_2', 'data_collection'}
     code = 'None'
 
-    paddings = {'padx': 5, 'pady': 5} 
     mice = ['JGED01', 'JGED02']
 
     window = tk.Tk()
     window.title('session setup')
-    window.geometry('800x200')
-    mouse_code = tk.StringVar(master=window, value='None') 
+    mouse_code = tk.StringVar(master=window, value='motor_training') 
 
     def _quit():
         window.quit()
@@ -63,4 +60,4 @@ def setup(pump: pump_ctrl.Pump):
     print(code)
     print(training)
 
-    return code, motor_training, training
+    return code, mode

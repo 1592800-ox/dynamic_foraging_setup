@@ -10,7 +10,7 @@ def init(cursor: mysql.connections.Cursor):
     tables = cursor.fetchall()
 
     if not ('mice',) in tables:
-        create_mice = "CREATE TABLE mice(mouse_code VARCHAR(255), date_of_birth DATE, trained boolean, trained_date DATE, dementia boolean);"
+        create_mice = "CREATE TABLE mice(mouse_code VARCHAR(255), date_of_birth DATE, trained_date DATE, dementia boolean, stage VARCHAR(10));"
         cursor.execute(create_mice)
 
     if not ('sessions',) in tables:
@@ -18,7 +18,7 @@ def init(cursor: mysql.connections.Cursor):
         cursor.execute(create_mouse_trial)
 
     if not ('trials',) in tables:
-        create_trials = "CREATE TABLE trials(mouse_code VARCHAR(255), date DATE, trial_indices integer, left_P double, right_P double, rewarded integer, reaction_time double, moving_speed double, CONSTRAINT session_id PRIMARY KEY (mouse_code, date))"
+        create_trials = "CREATE TABLE trials(mouse_code VARCHAR(255), date DATE, trial_indices integer, left_P double, right_P double, choices integer, rewarded integer, reaction_time double, moving_speed double, CONSTRAINT session_id PRIMARY KEY (mouse_code, date))"
         cursor.execute(create_trials)
 
 #------------------------------ UPLOAD DATA --------------------------------------------------#

@@ -1,11 +1,9 @@
-from turtle import color
-from matplotlib import markers
+# real-time plotting of mice's behaviour during the session
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-# TODO test if the Axes object are the same as the ones initialized by plt.subplots
-def monitor_train(left_p, right_p, fig, axes, trial_indices, choices, rewarded):
+def monitor_train(left_p, right_p, axes, trial_indices, choices, rewarded):
     axes[0].clear()
     axes[1].clear()
     choices = np.array(choices)
