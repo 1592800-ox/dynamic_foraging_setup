@@ -76,13 +76,13 @@ axes[0].set_ylim([-0.1, 1.3])
 axes[1].set_ylim([-0.1, 1.3])
 pump = Pump(OUT_REWARD)
 print('start setup')
-mode = setup(pump)
+code, mode = setup(pump)
 print('finished setup')
 
 train = True
 
 block = Block_UI()
-pygame.mixer.init(4096)
+pygame.mixer.init(400000)
 beep = pygame.mixer.Sound('beep-07a.wav')
 
 
@@ -98,6 +98,9 @@ def quadrature_decode(callback):
     global block
     global choice
 
+    Encoder_A = GPIO.input(IN_A)
+    Encoder_B = GPIO.input(IN_B)
+
     if (Encoder_A == 1 and Encoder_B_old == 0) or (Encoder_A == 0 and Encoder_B_old == 1):
         # this will be clockwise rotation
         if in_trial:
@@ -106,7 +109,7 @@ def quadrature_decode(callback):
                 if block.update_right(in_trial):
                     #in_trial = False
                     print('chose right')
-                    # chose left
+                    # chose right
                     choice = 1
                     choice_made=True
         else: # trial interval
@@ -119,9 +122,9 @@ def quadrature_decode(callback):
                 trial_movement += 1
                 if block.update_left(in_trial):
                     #in_trial = False
-                    print('chose right')
+                    print('chose left')
                     # chose left
-                    choice = 1
+                    choice = 0
                     choice_made=True
         else: # trial interval
             movement += 1
@@ -129,8 +132,8 @@ def quadrature_decode(callback):
     Encoder_A_old = Encoder_A   
     Encoder_B_old = Encoder_B       
 
-GPIO.add_event_detect(IN_A, GPIO.ALL, callback=quadrature_decode) 
-GPIO.add_event_detect(IN_B, GPIO.ALL, callback=quadrature_decode) 
+GPIO.add_event_detect(IN_A, GPIO.BOTH, callback=quadrature_decode) 
+GPIO.add_event_detect(IN_B, GPIO.BOTH, callback=quadrature_decode) 
 
 print('added event detection')
 
