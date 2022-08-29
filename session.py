@@ -73,7 +73,7 @@ print('finished setup')
 train = True
 
 block = Block_UI()
-pygame.mixer.init()
+pygame.mixer.init(4096)
 beep = pygame.mixer.Sound('beep-07a.wav')
 
 
