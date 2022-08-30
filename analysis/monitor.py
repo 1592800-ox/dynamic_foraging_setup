@@ -9,6 +9,7 @@ def monitor_train(left_p, right_p, axes, trial_indices, choices, rewarded):
     choices = np.array(choices)
     rewarded = np.array(rewarded)
 
+    # merge two plots into one, left is -1, shows leftP accurately
     left_rewarded = np.array([])
     left_unrewarded = np.array([])
     right_rewarded = np.array([])
