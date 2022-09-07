@@ -20,7 +20,7 @@ def init(cursor: cursor):
         cursor.execute(create_mouse_trial)
 
     if not ('trials',) in tables:
-        create_trials = "CREATE TABLE trials(mouse_code VARCHAR(10), date DATE, CONSTRAINT session_id FOREIGN KEY (mouse_code, date) REFERENCES sessions(mouse_code, date), trial_index integer, left_P double, right_P double, choices integer, rewarded integer, reaction_time double, moving_speed double); ALTER table trials add primary key(session_id, triald_index)"
+        create_trials = "CREATE TABLE trials(mouse_code VARCHAR(10), date DATE, CONSTRAINT session_id FOREIGN KEY (mouse_code, date) REFERENCES sessions(mouse_code, date), trial_index integer, left_P double, right_P double, choices integer, rewarded integer, reaction_time double, moving_speed double, CONSTRAINT trial_id PRIMARY KEY (mouse_code, date, trial_index))"
         cursor.execute(create_trials)
 
 
@@ -69,7 +69,11 @@ def delete_table(table_name, cursor: cursor):
 
 def delete_all(cursor: cursor):
     query = '''
-    DROP TABLE  mice, sessions, trials'''
+    SET FOREIGN_KEY_CHECKS = 0;
+    drop table if exists mice;
+    drop table if exists sessions;
+    drop table if exists trials;
+    SET FOREIGN_KEY_CHECKS = 1;'''
     try:
         cursor.execute(query)
         return True
