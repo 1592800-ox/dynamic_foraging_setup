@@ -1,4 +1,3 @@
-# avoiding dsp issue for now
 import collections
 import os
 from time import perf_counter, sleep
@@ -10,6 +9,8 @@ import pygame
 import RPi.GPIO as GPIO
 #from analysis.monitor import monitor_train
 import seaborn as sns
+from pydub import AudioSegment
+from pydub.playback import play
 
 import database.queries
 import database.tools.pymysql as mysql
@@ -31,6 +32,7 @@ trial_indices = []
 rewarded = []
 reaction_time = []
 moving_speed = []
+
 # choice made in a trial, left is 0 and right is 1
 choice = 0
 # advantageous side, 1 is right, 0 is left
@@ -41,11 +43,10 @@ trial_ind = 0
 movement = 0
 # number of movement during a trial
 trial_movement = 0
+
 # Control a mice session with loaded probability file 
 IN_A = 17
 IN_B = 5
-IN_A_FALL = 6
-# IN_B_FALL = 26
 OUT_REWARD = 26
 # seconds before a trial times out and we get a NaN trial
 TIME_OUT = 7
@@ -76,15 +77,12 @@ axes[0].set_ylim([-0.1, 1.3])
 axes[1].set_ylim([-0.1, 1.3])
 pump = Pump(OUT_REWARD)
 print('start setup')
-mode = setup(pump)
+code, mode = setup(pump)
 print('finished setup')
 
-train = True
-
 block = Block_UI()
-pygame.mixer.init(4096)
-beep = pygame.mixer.Sound('beep-07a.wav')
-
+pygame.mixer.init()
+beep = pygame.mixer.Sound('beep.mp3')
 
 def quadrature_decode(callback):
     global Encoder_A
@@ -98,6 +96,9 @@ def quadrature_decode(callback):
     global block
     global choice
 
+    Encoder_A = GPIO.input(IN_A)
+    Encoder_B = GPIO.input(IN_B)
+
     if (Encoder_A == 1 and Encoder_B_old == 0) or (Encoder_A == 0 and Encoder_B_old == 1):
         # this will be clockwise rotation
         if in_trial:
@@ -106,7 +107,7 @@ def quadrature_decode(callback):
                 if block.update_right(in_trial):
                     #in_trial = False
                     print('chose right')
-                    # chose left
+                    # chose right
                     choice = 1
                     choice_made=True
         else: # trial interval
@@ -119,9 +120,9 @@ def quadrature_decode(callback):
                 trial_movement += 1
                 if block.update_left(in_trial):
                     #in_trial = False
-                    print('chose right')
+                    print('chose left')
                     # chose left
-                    choice = 1
+                    choice = 0
                     choice_made=True
         else: # trial interval
             movement += 1
@@ -129,8 +130,8 @@ def quadrature_decode(callback):
     Encoder_A_old = Encoder_A   
     Encoder_B_old = Encoder_B       
 
-GPIO.add_event_detect(IN_A, GPIO.ALL, callback=quadrature_decode) 
-GPIO.add_event_detect(IN_B, GPIO.ALL, callback=quadrature_decode) 
+GPIO.add_event_detect(IN_A, GPIO.BOTH, callback=quadrature_decode) 
+GPIO.add_event_detect(IN_B, GPIO.BOTH, callback=quadrature_decode) 
 
 print('added event detection')
 
@@ -157,12 +158,12 @@ if mode != 'data_collection':
     last_twenty = collections.deque(20*[0], 20)
     
     # trial continues until stopped
-    while True:
+    while True:        
         print(reward_prob)
         # stop the system bring up not responding window
         pygame.event.pump()
         # random trial interval
-        sleep(np.random.randint(1, 4))
+        sleep(np.random.randint(0, 2))
 
         # block switch in trianing mode
         if mode != 'motor_training' and last_twenty.count(1) > 15 and curr_block > 40:
@@ -178,7 +179,10 @@ if mode != 'data_collection':
             sleep(0.5)
             if movement < 5:
                 break
+        
         beep.play()
+        sleep(0.1)
+        beep.stop()
         block.draw()
 
         start_time = perf_counter()
@@ -226,10 +230,14 @@ if mode != 'data_collection':
         print(sum(collections.Counter(last_twenty)) )
         # next trial
         trial_ind += 1
+        print(trial_ind)
 
-        monitor_train(left_p=left_P, right_p=right_P, axes=axes, trial_indices=trial_indices, choices=choices, rewarded=rewarded)
-        plt.show(block=False)
-        plt.pause(0.1)
+        # monitor_train(left_p=left_P, right_p=right_P, axes=axes, trial_indices=trial_indices, choices=choices, rewarded=rewarded)
+        # plt.show(block=False)
+        # plt.pause(0.1)
+        pygame.mixer.quit()
+        pygame.mixer.init(buffer=4096)
+        beep = pygame.mixer.Sound('beep.mp3')
 else:
     pass
 

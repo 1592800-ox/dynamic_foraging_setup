@@ -1,7 +1,7 @@
 import pygame
 from screeninfo import get_monitors
 
-ANGLE_TO_DISTANCE = 1 / 1024
+TICK_TO_DISTANCE = 5
 WHITE = (255,255,255)
 BLACK = (0,0,0)
 RED = (255,0,0)
@@ -28,7 +28,7 @@ class Block_UI:
     # move the block left a tick
     def update_left(self, in_trial):
         if in_trial:
-            self.x_pos = self.x_pos - ANGLE_TO_DISTANCE * 1024 * 10
+            self.x_pos = self.x_pos - TICK_TO_DISTANCE
             if self.x_pos < 0 - self.rec_width:
                 self.window.fill((BG_COLOR))
                 pygame.display.flip()
@@ -41,7 +41,7 @@ class Block_UI:
         
     def update_right(self, in_trial):
         if in_trial:
-            self.x_pos = self.x_pos + ANGLE_TO_DISTANCE * 1024 * 10
+            self.x_pos = self.x_pos + TICK_TO_DISTANCE
             if self.x_pos > self.m.width:
                 self.window.fill((BG_COLOR))
                 pygame.display.flip()
