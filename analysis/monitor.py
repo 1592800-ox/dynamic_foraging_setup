@@ -3,12 +3,13 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-def monitor_train(left_p, right_p, axes, trial_indices, choices, rewarded):
+def monitor_train(left_p, right_p, axes: plt.Axes, trial_indices, choices, rewarded):
     axes[0].clear()
     axes[1].clear()
     choices = np.array(choices)
     rewarded = np.array(rewarded)
 
+    # merge two plots into one, left is -1, shows leftP accurately
     left_rewarded = np.array([])
     left_unrewarded = np.array([])
     right_rewarded = np.array([])
