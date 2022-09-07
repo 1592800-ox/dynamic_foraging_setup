@@ -204,7 +204,7 @@ if mode != 'data_collection':
                 block.reset()
                 in_trial = False
                 break
-            block.draw()
+            block.draw()    
             if perf_counter() - start_time > TIME_OUT:
                 # no reward for nan trials either
                 rewarded.append(0)
