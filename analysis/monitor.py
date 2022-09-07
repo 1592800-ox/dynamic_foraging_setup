@@ -3,9 +3,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-def monitor_train(left_p, right_p, axes: plt.Axes, trial_indices, choices, rewarded):
-    axes[0].clear()
-    axes[1].clear()
+def monitor_train(left_p, axes: plt.Axes, trial_indices, choices, rewarded):
+    axes.clear()
     choices = np.array(choices)
     rewarded = np.array(rewarded)
 
@@ -27,32 +26,31 @@ def monitor_train(left_p, right_p, axes: plt.Axes, trial_indices, choices, rewar
             right_unrewarded = np.where((choices == 1) & (rewarded == 0))[0]
 
     if left_rewarded.size > 0:
-        axes[0].plot([left_rewarded], 1.1, marker='o', color='c')
+        axes.plot([left_rewarded], -1.1, marker='o', color='c')
     if left_unrewarded.size > 0:
-        axes[0].plot([left_unrewarded], 1.2, marker='x', color='m')
+        axes.plot([left_unrewarded], -1.2, marker='x', color='m')
     if right_rewarded.size > 0:
-        axes[1].plot([right_rewarded], 1.1, marker='o', color='c')
+        axes.plot([right_rewarded], 1.1, marker='o', color='c')
     if right_unrewarded.size > 0:
-        axes[1].plot([right_unrewarded], 1.2, marker='x', color='m')
+        axes.plot([right_unrewarded], 1.2, marker='x', color='m')
 
-    print(rewarded)
+    nan_indices = np.where(choices == -1)
+    left_indices = np.where(choices == 0)
     print(choices)
-    choices_left = choices == 0
-    choices_right = choices == 1
-    choices_left.astype(int)
-    choices_right.astype(int)
-    print(choices_left)
-    print(choices_right)
-    print(trial_indices) 
-    if choices.size > 5:  
-        if choices_left.size > 0:
-            choices_left = np.convolve(choices_left, np.ones(5), 'same') / 5
-            print(choices_left)
-            sns.lineplot(x=trial_indices, y=choices_left, ax=axes[0], color='black')
-        if choices_right.size > 0:
-            choices_right = np.convolve(choices_right, np.ones(5), 'same') / 5
-            print(choices_right)
-            sns.lineplot(x=trial_indices, y=choices_right, ax=axes[1], color='black')
+    choices[left_indices] = -1
+    choices[nan_indices] = 0
+    print(choices)
 
-    sns.lineplot(x=trial_indices, y = left_p, color='blue', ax=axes[0])
-    sns.lineplot(x=trial_indices, y = right_p, color='blue', ax=axes[1])
+    if choices.size > 5:  
+        choices = np.convolve(choices, np.ones(5), 'same') / 5
+        sns.lineplot(x=trial_indices, y=choices, ax=axes, color='black')
+    
+    set_prob = []
+
+    for p in left_p:
+        if p > 0.5:
+            set_prob.append(-p)
+        else:
+            set_prob.append(1-p)
+    
+    sns.lineplot(x=trial_indices, y = set_prob, color='blue', ax=axes)
