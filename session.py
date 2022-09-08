@@ -7,13 +7,9 @@ import numpy as np
 import pandas as pd
 import pygame
 import RPi.GPIO as GPIO
-#from analysis.monitor import monitor_train
-import seaborn as sns
-from pydub import AudioSegment
-from pydub.playback import play
 
 import database.queries
-import database.tools.pymysql as mysql
+import mysql.connector
 import hardware.modules.mice_ui as mice_ui
 from analysis.monitor import monitor_train
 from database.queries import upload_session
