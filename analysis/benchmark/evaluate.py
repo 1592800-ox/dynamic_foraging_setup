@@ -1,7 +1,11 @@
 # functions used to evaluated an animal's performance in a session
 
+import enum
+from re import L
 import numpy as np
 import matplotlib.pyplot as plt
+from kneed import KneeLocator
+
 
 def get_nan_percent(choices: np.ndarray):
     nan_percent = []
@@ -12,7 +16,6 @@ def get_nan_percent(choices: np.ndarray):
                 nan_count += 1
         nan_percent.append(float(nan_count) / 5.0)
     return nan_percent
-
 
 def get_performance(choices: np.ndarray, leftP: np.ndarray, version: str):
     if len(choices) != len(leftP) or not len(choices > 0):
@@ -30,7 +33,12 @@ def get_performance(choices: np.ndarray, leftP: np.ndarray, version: str):
 
 def tolerant_mean(arrs):
     lens = [len(i) for i in arrs]
-    arr = np.ma.empty((np.max(lens),len(arrs)))
+    lens_cutoff = int(np.mean(lens) + np.std(lens))
+    # cut off trials indices that are not reached by half the sessions
+    for ind, l in enumerate(arrs):
+        if len(l) > lens_cutoff:
+            arrs[ind] = l[:lens_cutoff]
+    arr = np.ma.empty((np.max(lens_cutoff),len(arrs)))
     arr.mask = True
     for idx, l in enumerate(arrs):
         arr[:len(l),idx] = l
@@ -44,14 +52,17 @@ def plot_nan_percent(nan_percents: np.ndarray):
     upper = y + error
     x = np.arange(5, len(y) + 5)
 
+    kn = KneeLocator(x, y, curve='convex', direction='increasing')
+    print('elbo is %d', kn.knee)
+
     # Draw plot with error band and extra formatting to match seaborn style
     fig, ax = plt.subplots(figsize=(9,5))
-    ax.plot(x, y, label='signal mean')
+    ax.plot(x, y, label='performance mean')
     ax.plot(x, lower, color='tab:blue', alpha=0.1)
     ax.plot(x, upper, color='tab:blue', alpha=0.1)
     ax.fill_between(x, lower, upper, alpha=0.2)
-    ax.set_xlabel('timepoint')
-    ax.set_ylabel('signal')
+    ax.set_xlabel('trial index')
+    ax.set_ylabel('nan percentage')
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
     plt.show()
