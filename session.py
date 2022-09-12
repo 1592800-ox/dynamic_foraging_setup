@@ -83,8 +83,7 @@ config = {
     'host': 'dynamic-foraging-mysql.mysql.database.azure.com',
     'user': 'peiheng',
     'password': 'Luph65588590-',
-    'database': 'dynamic-foraging',
-    'client_flags': [mysql.connector.ClientFlag.SSL]
+    'database': 'dynamic-foraging'
 }
 
 # try connecting 5 times before giving up
@@ -99,9 +98,12 @@ while not uploaded and error_counter >= 0:
     except Exception:
         print('connection error, retry %d time' % error_counter)
         error_counter -= 1
-    
+
+print('connecting up')
+
 mice = queries.get_animals(cursor)
 mouse_code = setup(pump, mice)
+print('setting up')
 mode = queries.get_stage(mouse_code, cursor)
 
 session_length = TRIAL_NUM[mode]

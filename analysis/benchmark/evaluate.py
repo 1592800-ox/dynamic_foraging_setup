@@ -4,7 +4,6 @@ import enum
 from re import L
 import numpy as np
 import matplotlib.pyplot as plt
-from kneed import KneeLocator
 
 
 def get_nan_percent(choices: np.ndarray):
@@ -64,9 +63,6 @@ def plot_nan_percent(nan_percents: np.ndarray, title: str):
     lower = y - error
     upper = y + error
     x = np.arange(5, len(y) + 5)
-
-    kn = KneeLocator(x, y, curve='convex', direction='increasing')
-    print('elbo is %d', kn.knee)
 
     # Draw plot with error band and extra formatting to match seaborn style
     plt.tight_layout()
