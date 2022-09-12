@@ -30,6 +30,19 @@ def get_performance(choices: np.ndarray, leftP: np.ndarray, version: str):
     adv = np.logical_and(chose_right, right_adv)
     return float(sum(adv)) / float(len(choices))
 
+def get_performance_new(choices: np.ndarray, leftP: np.ndarray, mode: str):
+    if len(choices) != len(leftP) or not len(choices > 0):
+        try:
+            raise RuntimeError
+        finally:
+            print('choices and set probability has different lengths')
+    if 'motor' in mode:
+        return float(sum(choices != -1)) / float(len(choices))
+    chose_right = np.array(choices == 1, dtype=bool) 
+    right_adv = np.array(leftP < 0.5, dtype=bool)
+    adv = np.logical_and(chose_right, right_adv)
+    return float(sum(adv)) / float(len(choices))
+
 
 def tolerant_mean(arrs):
     lens = [len(i) for i in arrs]
@@ -45,7 +58,7 @@ def tolerant_mean(arrs):
     return arr.mean(axis = -1), arr.std(axis=-1)
 
 
-def plot_nan_percent(nan_percents: np.ndarray):
+def plot_nan_percent(nan_percents: np.ndarray, title: str):
     y, error = tolerant_mean(nan_percents)
     error = error / 2
     lower = y - error
@@ -56,7 +69,9 @@ def plot_nan_percent(nan_percents: np.ndarray):
     print('elbo is %d', kn.knee)
 
     # Draw plot with error band and extra formatting to match seaborn style
-    fig, ax = plt.subplots(figsize=(9,5))
+    plt.tight_layout()
+    plt.rcParams.update({'font.size': 18})
+    fig, ax = plt.subplots(figsize=(5,5))
     ax.plot(x, y, label='performance mean')
     ax.plot(x, lower, color='tab:blue', alpha=0.1)
     ax.plot(x, upper, color='tab:blue', alpha=0.1)
@@ -65,4 +80,6 @@ def plot_nan_percent(nan_percents: np.ndarray):
     ax.set_ylabel('nan percentage')
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
+    ax.set_title(title)
+    plt.savefig(title + '.png', dpi=300, bbox_inches = "tight")
     plt.show()
