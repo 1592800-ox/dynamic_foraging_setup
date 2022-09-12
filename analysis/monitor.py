@@ -54,3 +54,4 @@ def monitor_train(left_p, axes: plt.Axes, trial_indices, choices, rewarded):
             set_prob.append(1-p)
     
     sns.lineplot(x=trial_indices, y = set_prob, color='blue', ax=axes)
+    axes.set_title('trial index: %d, reward given: %d' % (trial_indices[-1], np.sum(rewarded == 1)))

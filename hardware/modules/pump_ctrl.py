@@ -8,7 +8,7 @@ class Pump:
     # quick pulse to the pump
     def send_reward(self):
         GPIO.output(self.pin, 1)
-        sleep(0.15)
+        sleep(0.13)
         GPIO.output(self.pin, 0)
 
     def open_valve(self):

@@ -162,7 +162,9 @@ if mode != 'data_collection':
 
         # block switch in trianing mode
         if mode != 'motor_training' and last_twenty.count(1) > 15 and curr_block > 40:
+            print(curr_block)
             print('switch prob')
+            curr_block = 0
             adv = abs(1 - adv)
             reward_prob[adv] = np.random.uniform(low=0.85, high=0.95, size=1)
             reward_prob[abs(1-adv)] = 1 - reward_prob[adv]
@@ -221,10 +223,9 @@ if mode != 'data_collection':
         left_P.append(reward_prob[0])
         right_P.append(reward_prob[1])
         choices.append(choice)
-        print(last_twenty)
-        print(sum(collections.Counter(last_twenty)) )
         # next trial
         trial_ind += 1
+        curr_block += 1
         print(trial_ind)
 
         monitor_train(left_p=left_P, axes=axes, trial_indices=trial_indices, choices=choices, rewarded=rewarded)
