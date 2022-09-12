@@ -36,10 +36,8 @@ def monitor_train(left_p, axes: plt.Axes, trial_indices, choices, rewarded):
 
     nan_indices = np.where(choices == -1)
     left_indices = np.where(choices == 0)
-    print(choices)
     choices[left_indices] = -1
     choices[nan_indices] = 0
-    print(choices)
 
     if choices.size > 5:  
         choices = np.convolve(choices, np.ones(5), 'same') / 5

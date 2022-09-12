@@ -7,8 +7,10 @@ import numpy as np
 import pandas as pd
 import pygame
 import RPi.GPIO as GPIO
+from analysis.benchmark.benchmark import benchmark
+from datetime import date
 
-import database.queries
+from database import queries
 import mysql.connector
 import hardware.modules.mice_ui as mice_ui
 from analysis.monitor import monitor_train
@@ -17,13 +19,15 @@ from hardware.modules.mice_ui import Block_UI
 from hardware.modules.pump_ctrl import Pump
 from hardware.modules.setup import setup
 
+
+
 # TODO sort out the variables 
 # variables storing trial data
 MOTOR_REWARD =  0.9
 reward_prob = np.array([0.9, 0.9])
 choices = []
-left_P = []
-right_P = []
+leftP = []
+rightP = []
 trial_indices = []
 rewarded = []
 reaction_time = []
@@ -44,15 +48,14 @@ trial_movement = 0
 IN_A = 17
 IN_B = 5
 OUT_REWARD = 26
+
 # seconds before a trial times out and we get a NaN trial
 TIME_OUT = 7
 # Flag indicating whether we are in the middle of a trial or not
 in_trial = False
 # enure only one choice is stored
 choice_made = False
-partial_left = False
-partial_right = False
-TRIAL_NUM = 0
+TRIAL_NUM = {'motor_training': 350, 'training_1': 400, 'training_2': 450, 'data_collection': 400}
 
 Encoder_A = 0
 Encoder_A_old = 0
@@ -71,9 +74,37 @@ GPIO.setup(OUT_REWARD, GPIO.OUT, initial=GPIO.LOW)
 fig, axes = plt.subplots(1, 1, figsize=(16, 8))
 axes.set_ylim([-1.3, 1.3])
 pump = Pump(OUT_REWARD)
-print('start setup')
-code, mode = setup(pump)
-print('finished setup')
+
+today = date.today()
+today.strftime('YYYY/MM/dd')
+
+# Creating connection
+config = {
+    'host': 'dynamic-foraging-mysql.mysql.database.azure.com',
+    'user': 'peiheng',
+    'password': 'Luph65588590-',
+    'database': 'dynamic-foraging',
+    'client_flags': [mysql.connector.ClientFlag.SSL]
+}
+
+# try connecting 5 times before giving up
+error_counter = 5
+uploaded = False
+
+while not uploaded and error_counter >= 0:
+    try:
+        db = mysql.connector.connect(**config)
+        cursor = db.cursor()
+        uploaded = True
+    except Exception:
+        print('connection error, retry %d time' % error_counter)
+        error_counter -= 1
+    
+mice = queries.get_animals(cursor)
+mouse_code = setup(pump, mice)
+mode = queries.get_stage(mouse_code, cursor)
+
+session_length = TRIAL_NUM[mode]
 
 block = Block_UI()
 pygame.mixer.init()
@@ -128,23 +159,24 @@ def quadrature_decode(callback):
 GPIO.add_event_detect(IN_A, GPIO.BOTH, callback=quadrature_decode) 
 GPIO.add_event_detect(IN_B, GPIO.BOTH, callback=quadrature_decode) 
 
-print('added event detection')
+
 
 if mode == 'motor_training':
     print('motor training')
     # reward prob for motor training
     reward_prob[0] = MOTOR_REWARD
     reward_prob[1] = MOTOR_REWARD
-    TRIAL_NUM = 300
+    TRIAL_NUM = 350
 
-if mode == 'training_1' or mode == 'training_2':
+if mode == 'training_1':
     adv = np.random.binomial(1, 0.5)
-    reward_prob[adv] = np.random.uniform(low=0.85, high=0.95, size=1)
+    reward_prob[adv] = np.random.uniform(low=0.9, high=0.95, size=1)
     reward_prob[abs(1-adv)] = 1 - reward_prob[adv]
-    if mode == 'training_1':
-        TRIAL_NUM = 350
-    else:
-        TRIAL_NUM = 450
+
+if mode == 'training_2' or mode == 'standby':
+    adv = np.random.binomial(1, 0.5)
+    reward_prob[adv] = np.random.uniform(low=0.85, high=0.9, size=1)
+    reward_prob[abs(1-adv)] = 1 - reward_prob[adv]
 
 if mode != 'data_collection':
     # number of trials spend on the current block
@@ -218,8 +250,8 @@ if mode != 'data_collection':
         block.reset()
         # store trial data
         trial_indices.append(trial_ind)
-        left_P.append(reward_prob[0])
-        right_P.append(reward_prob[1])
+        leftP.append(reward_prob[0])
+        rightP.append(reward_prob[1])
         choices.append(choice)
         print(last_twenty)
         print(sum(collections.Counter(last_twenty)) )
@@ -227,7 +259,7 @@ if mode != 'data_collection':
         trial_ind += 1
         print(trial_ind)
 
-        monitor_train(left_p=left_P, axes=axes, trial_indices=trial_indices, choices=choices, rewarded=rewarded)
+        monitor_train(left_p=leftP, axes=axes, trial_indices=trial_indices, choices=choices, rewarded=rewarded)
         plt.show(block=False)
         plt.pause(0.1)
         pygame.mixer.quit()
@@ -236,26 +268,27 @@ if mode != 'data_collection':
 else:
     pass
 
-# Creating connection
-config = {
-    'host': 'dynamic-foraging-mysql.mysql.database.azure.com',
-    'user': 'peiheng',
-    'password': 'Luph65588590-',
-    'database': 'dynamic-foraging',
-    'client_flags': [mysql.connector.ClientFlag.SSL]
-}
+#TODO add a standby stage: training finished but animal not old enough
+passed = benchmark(stage=mode, choices=choices, leftP=leftP)
+
+if passed:
+    db = mysql.connector.connect(**config)
+    cursor = db.cursor()
+    queries.next_stage(mouse_code, cursor=cursor, stage=mode)
 
 # try upload 5 times before giving up
 error_counter = 5
 uploaded = False
 
+#TODO add a confirmation gui for backup store
 while not uploaded and error_counter >= 0:
     try:
         db = mysql.connector.connect(**config)
         cursor = db.cursor()
+        queries.upload_session(mouse_code, today)
         uploaded = True
     except Exception:
         print('connection error, retry %d time' % error_counter)
         error_counter -= 1
 
-
+db.commit()
