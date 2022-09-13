@@ -226,6 +226,7 @@ if prob_set < 0:
             if choice != -1:
                 print('choice made')
                 reaction_time.append(perf_counter() - start_time)
+                moving_speed.append(trial_movement / reaction_time)
                 if np.random.binomial(1, reward_prob[choice]):
                     # if given reward
                     pump.send_reward()
@@ -243,13 +244,13 @@ if prob_set < 0:
                 # no reward for nan trials either
                 rewarded.append(0)
                 reaction_time.append(-1)
+                moving_speed.append(-1)
                 last_twenty.append(0)
                 in_trial = False
                 block.reset()
                 block.window.fill(mice_ui.BG_COLOR)
                 pygame.display.flip()
                 break
-        moving_speed.append(trial_movement)
         block.reset()
         # store trial data
         trial_indices.append(trial_ind)
