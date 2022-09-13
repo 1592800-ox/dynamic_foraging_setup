@@ -1,4 +1,5 @@
 import collections
+from modulefinder import replacePackageMap
 import os
 from time import perf_counter, sleep
 
@@ -57,6 +58,8 @@ in_trial = False
 choice_made = False
 TRIAL_NUM = {'motor_training': 350, 'training_1': 400, 'training_2': 450, 'data_collection': 400}
 
+prob_set = -3
+
 Encoder_A = 0
 Encoder_A_old = 0
 Encoder_B = 0
@@ -86,24 +89,16 @@ config = {
     'database': 'dynamic-foraging'
 }
 
-# try connecting 5 times before giving up
-error_counter = 5
-uploaded = False
 
-while not uploaded and error_counter >= 0:
-    try:
-        db = mysql.connector.connect(**config)
-        cursor = db.cursor()
-        uploaded = True
-    except Exception:
-        print('connection error, retry %d time' % error_counter)
-        error_counter -= 1
+try:
+    db = mysql.connector.connect(**config)
+    cursor = db.cursor()
+except Exception:
+    print('connection error')
 
-print('connecting up')
 
 mice = queries.get_animals(cursor)
 mouse_code = setup(pump, mice)
-print('setting up')
 mode = queries.get_stage(mouse_code, cursor)
 
 session_length = TRIAL_NUM[mode]
@@ -169,18 +164,22 @@ if mode == 'motor_training':
     reward_prob[0] = MOTOR_REWARD
     reward_prob[1] = MOTOR_REWARD
     TRIAL_NUM = 350
-
-if mode == 'training_1':
+    prob_set = -3
+elif mode == 'training_1':
     adv = np.random.binomial(1, 0.5)
     reward_prob[adv] = np.random.uniform(low=0.9, high=0.95, size=1)
     reward_prob[abs(1-adv)] = 1 - reward_prob[adv]
-
-if mode == 'training_2' or mode == 'standby':
+    prob_set = -2
+elif mode == 'training_2' or mode == 'standby':
     adv = np.random.binomial(1, 0.5)
     reward_prob[adv] = np.random.uniform(low=0.85, high=0.9, size=1)
     reward_prob[abs(1-adv)] = 1 - reward_prob[adv]
+    prob_set = -1
+else:
+    prob_set = int(mode)
+    
 
-if mode != 'data_collection':
+if prob_set < 0:
     # number of trials spend on the current block
     curr_block = 0
     # percentage of the animal choosing the more advantagous side in the past twenty trials
@@ -271,27 +270,36 @@ if mode != 'data_collection':
 else:
     pass
 
-#TODO add a standby stage: training finished but animal not old enough
-passed = benchmark(stage=mode, choices=choices, leftP=leftP)
-
-if passed:
+try:
     db = mysql.connector.connect(**config)
     cursor = db.cursor()
-    queries.next_stage(mouse_code, cursor=cursor, stage=mode)
+except Exception:
+    print('connection error')
+
+queries.upload_session(mouse_code, today, stage=mode, prob_set=prob_set, choices=choices, rewarded=rewarded, trial_indices=trial_indices, leftP=leftP, rightP=rightP, reaction_time=reaction_time, moving_speed=moving_speed, cursor=cursor)
+
+if mode == 'standby':
+    age = queries.get_age(mouse_code=mouse_code, cursor=cursor)
+
+    if age > 90:
+        queries.start_collect(mouse_code=mouse_code, cursor=cursor)
+
+
+#TODO add a standby stage: training finished but animal not old enough
+if prob_set < 0 and mode != 'standby':
+    passed = benchmark(stage=mode, choices=choices, leftP=leftP)
+
+    if passed:
+        queries.next_stage(mouse_code, cursor=cursor, stage=mode)
+
+if prob_set >= 0:
+
+    queries.next_set(mouse_code, prob_set, cursor)
 
 # try upload 5 times before giving up
 error_counter = 5
 uploaded = False
 
-#TODO add a confirmation gui for backup store
-while not uploaded and error_counter >= 0:
-    try:
-        db = mysql.connector.connect(**config)
-        cursor = db.cursor()
-        queries.upload_session(mouse_code, today)
-        uploaded = True
-    except Exception:
-        print('connection error, retry %d time' % error_counter)
-        error_counter -= 1
+
 
 db.commit()
