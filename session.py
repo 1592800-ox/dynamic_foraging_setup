@@ -227,7 +227,7 @@ if prob_set < 0:
             if choice != -1:
                 print('choice made')
                 reaction_time.append(perf_counter() - start_time)
-                moving_speed.append(trial_movement / reaction_time)
+                moving_speed.append(trial_movement / (perf_counter() - start_time))
                 if np.random.binomial(1, reward_prob[choice]):
                     # if given reward
                     pump.send_reward()
@@ -273,6 +273,8 @@ if prob_set < 0:
 
         session_length -= 1
 
+        print(moving_speed)
+
         pygame.mixer.quit()
         pygame.mixer.init(buffer=4096)
         beep = pygame.mixer.Sound('beep.mp3')
@@ -290,7 +292,7 @@ if mode == 'standby':
 
 
 if prob_set < 0 and mode != 'standby':
-    passed = benchmark(stage=mode, choices=choices, leftP=leftP)
+    passed = benchmark(stage=mode, choices=np.array(choices), leftP=np.array(leftP))
 
     if passed:
         queries.next_stage(mouse_code, cursor=cursor, stage=mode)
