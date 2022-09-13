@@ -1,30 +1,29 @@
 import collections
-from modulefinder import replacePackageMap
 import os
+from datetime import date
+from modulefinder import replacePackageMap
 from time import perf_counter, sleep
 
 import matplotlib.pyplot as plt
+import mysql.connector
 import numpy as np
 import pandas as pd
 import pygame
 import RPi.GPIO as GPIO
-from analysis.benchmark.benchmark import benchmark
-from datetime import date
 
-from database import queries
-import mysql.connector
 import hardware.modules.mice_ui as mice_ui
+from analysis.benchmark.benchmark import benchmark
+from analysis.benchmark.evaluate import get_performance_new
 from analysis.monitor import monitor_train
+from database import queries
 from database.queries import upload_session
 from hardware.modules.mice_ui import Block_UI
 from hardware.modules.pump_ctrl import Pump
 from hardware.modules.setup import setup
 
-
-
-# TODO sort out the variables 
+# TODO sort out the variables
 # variables storing trial data
-MOTOR_REWARD =  0.9
+MOTOR_REWARD = 0.9
 reward_prob = np.array([0.9, 0.9])
 choices = []
 leftP = []
@@ -45,7 +44,7 @@ movement = 0
 # number of movement during a trial
 trial_movement = 0
 
-# Control a mice session with loaded probability file 
+# Control a mice session with loaded probability file
 IN_A = 17
 IN_B = 5
 OUT_REWARD = 26
@@ -56,7 +55,8 @@ TIME_OUT = 7
 in_trial = False
 # enure only one choice is stored
 choice_made = False
-TRIAL_NUM = {'motor_training': 350, 'training_1': 400, 'training_2': 450, 'data_collection': 400}
+TRIAL_NUM = {'motor_training': 10, 'training_1': 400,
+             'training_2': 450, 'standby': 5}
 
 prob_set = -3
 
@@ -107,6 +107,7 @@ block = Block_UI()
 pygame.mixer.init()
 beep = pygame.mixer.Sound('beep.mp3')
 
+
 def quadrature_decode(callback):
     global Encoder_A
     global Encoder_A_old
@@ -132,8 +133,8 @@ def quadrature_decode(callback):
                     print('chose right')
                     # chose right
                     choice = 1
-                    choice_made=True
-        else: # trial interval
+                    choice_made = True
+        else:  # trial interval
             movement += 1
 
     elif (Encoder_A == 1 and Encoder_B_old == 1) or (Encoder_A == 0 and Encoder_B_old == 0):
@@ -146,16 +147,16 @@ def quadrature_decode(callback):
                     print('chose left')
                     # chose left
                     choice = 0
-                    choice_made=True
-        else: # trial interval
+                    choice_made = True
+        else:  # trial interval
             movement += 1
-        
-    Encoder_A_old = Encoder_A   
-    Encoder_B_old = Encoder_B       
 
-GPIO.add_event_detect(IN_A, GPIO.BOTH, callback=quadrature_decode) 
-GPIO.add_event_detect(IN_B, GPIO.BOTH, callback=quadrature_decode) 
+    Encoder_A_old = Encoder_A
+    Encoder_B_old = Encoder_B
 
+
+GPIO.add_event_detect(IN_A, GPIO.BOTH, callback=quadrature_decode)
+GPIO.add_event_detect(IN_B, GPIO.BOTH, callback=quadrature_decode)
 
 
 if mode == 'motor_training':
@@ -177,16 +178,16 @@ elif mode == 'training_2' or mode == 'standby':
     prob_set = -1
 else:
     prob_set = int(mode)
-    
+
 
 if prob_set < 0:
     # number of trials spend on the current block
     curr_block = 0
     # percentage of the animal choosing the more advantagous side in the past twenty trials
     last_twenty = collections.deque(20*[0], 20)
-    
+
     # trial continues until stopped
-    while True:        
+    while session_length > 0:
         print(reward_prob)
         # stop the system bring up not responding window
         pygame.event.pump()
@@ -209,7 +210,7 @@ if prob_set < 0:
             sleep(0.5)
             if movement < 5:
                 break
-        
+
         beep.play()
         sleep(0.1)
         beep.stop()
@@ -238,7 +239,7 @@ if prob_set < 0:
                 block.reset()
                 in_trial = False
                 break
-            block.draw()    
+            block.draw()
             if perf_counter() - start_time > TIME_OUT:
                 # no reward for nan trials either
                 rewarded.append(0)
@@ -249,6 +250,7 @@ if prob_set < 0:
                 block.window.fill(mice_ui.BG_COLOR)
                 pygame.display.flip()
                 break
+
         moving_speed.append(trial_movement)
         block.reset()
         # store trial data
@@ -261,31 +263,32 @@ if prob_set < 0:
         curr_block += 1
         print(trial_ind)
 
-        monitor_train(left_p=leftP, axes=axes, trial_indices=trial_indices, choices=choices, rewarded=rewarded)
-        plt.show(block=False)
-        plt.pause(0.1)
+        if prob_set > -3:
+            monitor_train(left_p=leftP, axes=axes, trial_indices=trial_indices,
+                          choices=choices, rewarded=rewarded)
+            plt.show(block=False)
+            plt.pause(0.1)
+        else:
+            print(get_performance_new(np.array(choices), np.array(leftP), mode))
+
+        session_length -= 1
+
         pygame.mixer.quit()
         pygame.mixer.init(buffer=4096)
         beep = pygame.mixer.Sound('beep.mp3')
 else:
     pass
 
-try:
-    db = mysql.connector.connect(**config)
-    cursor = db.cursor()
-except Exception:
-    print('connection error')
 
-queries.upload_session(mouse_code, today, stage=mode, prob_set=prob_set, choices=choices, rewarded=rewarded, trial_indices=trial_indices, leftP=leftP, rightP=rightP, reaction_time=reaction_time, moving_speed=moving_speed, cursor=cursor)
-
+# start data collection when a trained animal is old enough
 if mode == 'standby':
     age = queries.get_age(mouse_code=mouse_code, cursor=cursor)
+    print(age)
 
     if age > 90:
         queries.start_collect(mouse_code=mouse_code, cursor=cursor)
 
 
-#TODO add a standby stage: training finished but animal not old enough
 if prob_set < 0 and mode != 'standby':
     passed = benchmark(stage=mode, choices=choices, leftP=leftP)
 
@@ -293,12 +296,11 @@ if prob_set < 0 and mode != 'standby':
         queries.next_stage(mouse_code, cursor=cursor, stage=mode)
 
 if prob_set >= 0:
-
     queries.next_set(mouse_code, prob_set, cursor)
 
-# try upload 5 times before giving up
-error_counter = 5
-uploaded = False
+
+queries.upload_session(mouse_code, today, stage=mode, prob_set=prob_set, choices=choices, rewarded=rewarded,
+                       trial_indices=trial_indices, leftP=leftP, rightP=rightP, reaction_time=reaction_time, moving_speed=moving_speed, cursor=cursor)
 
 
 
