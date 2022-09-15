@@ -45,7 +45,7 @@ movement = 0
 trial_movement = 0
 
 # Control a mice session with loaded probability file
-IN_A = 17
+IN_A = 4
 IN_B = 5
 OUT_REWARD = 26
 
