@@ -1,7 +1,7 @@
 import pygame
 from screeninfo import get_monitors
 
-TICK_TO_DISTANCE = 5
+TICK_TO_DISTANCE = 10
 WHITE = (255,255,255)
 BLACK = (0,0,0)
 RED = (255,0,0)

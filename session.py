@@ -273,8 +273,6 @@ if prob_set < 0:
 
         session_length -= 1
 
-        print(moving_speed)
-
         pygame.mixer.quit()
         pygame.mixer.init(buffer=4096)
         beep = pygame.mixer.Sound('beep.mp3')
