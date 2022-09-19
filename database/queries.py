@@ -62,6 +62,7 @@ def add_animal(mouse_code: str, date_of_birth: str, cursor: CursorBase):
     try:
         cursor.execute(query)
     except Exception:
+        print('animal already exist')
         return False
     return True
 

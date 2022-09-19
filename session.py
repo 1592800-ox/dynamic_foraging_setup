@@ -76,7 +76,6 @@ GPIO.setup(OUT_REWARD, GPIO.OUT, initial=GPIO.LOW)
 
 fig, axes = plt.subplots(1, 1, figsize=(16, 8))
 axes.set_ylim([-1.3, 1.3])
-pump = Pump(OUT_REWARD)
 
 today = date.today()
 today.strftime('YYYY/MM/dd')
@@ -98,6 +97,7 @@ except Exception:
 
 
 mice = queries.get_animals(cursor)
+pump = Pump(OUT_REWARD)
 mouse_code = setup(pump, mice)
 mode = queries.get_stage(mouse_code, cursor)
 
@@ -230,7 +230,7 @@ if prob_set < 0:
                 moving_speed.append(trial_movement / (perf_counter() - start_time))
                 if np.random.binomial(1, reward_prob[choice]):
                     # if given reward
-                    pump.send_reward()
+                    pump.send_reward(mode)
                     rewarded.append(1)
                     print('rewarded')
                 else:
