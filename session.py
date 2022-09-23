@@ -179,6 +179,7 @@ elif mode == 'training_2' or mode == 'standby':
 else:
     prob_set = int(mode)
 
+session_start_time = perf_counter()
 
 if prob_set < 0:
     # number of trials spend on the current block
@@ -187,7 +188,7 @@ if prob_set < 0:
     last_twenty = collections.deque(20*[0], 20)
 
     # trial continues until stopped
-    while session_length > 0:
+    while session_length > 0 and perf_counter() - session_start_time < 2700:
         print(reward_prob)
         # stop the system bring up not responding window
         pygame.event.pump()
