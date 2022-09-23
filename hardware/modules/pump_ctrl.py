@@ -9,9 +9,9 @@ class Pump:
     def send_reward(self, mode):
         GPIO.output(self.pin, 1)
         if 'motor' in mode:
-            sleep(0.15)
+            sleep(0.2)
         else:
-            sleep(0.1)
+            sleep(0.25)
         GPIO.output(self.pin, 0)
 
     def open_valve(self):
