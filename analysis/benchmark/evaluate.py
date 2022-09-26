@@ -27,7 +27,9 @@ def get_performance(choices: np.ndarray, leftP: np.ndarray, version: str):
     chose_right = np.array(choices == 1, dtype=bool) 
     right_adv = np.array(leftP < 0.5, dtype=bool)
     adv = np.logical_and(chose_right, right_adv)
-    return float(sum(adv)) / float(len(choices))
+    adv_percent = float(sum(adv)) / float(len(choices))
+    switches = get_switches(leftP) / 10.0
+    return adv_percent + switches
 
 def get_performance_new(choices: np.ndarray, leftP: np.ndarray, mode: str):
     if len(choices) != len(leftP) or not len(choices > 0):
@@ -79,3 +81,12 @@ def plot_nan_percent(nan_percents: np.ndarray, title: str):
     ax.set_title(title)
     plt.savefig(title + '.png', dpi=300, bbox_inches = "tight")
     plt.show()
+
+def get_switches(leftP):
+    switches = 0
+
+    for index, p in enumerate(leftP):
+        if index > 0 and p != leftP[index - 1]:
+            switches += 1
+    
+    return switches
