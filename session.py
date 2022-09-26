@@ -55,7 +55,7 @@ TIME_OUT = 7
 in_trial = False
 # enure only one choice is stored
 choice_made = False
-TRIAL_NUM = {'motor_training': 350, 'training_1': 400,
+TRIAL_NUM = {'motor_training': 300, 'training_1': 400,
              'training_2': 450, 'standby': 450}
 
 prob_set = -3
@@ -103,7 +103,7 @@ mode = queries.get_stage(mouse_code, cursor)
 
 session_length = TRIAL_NUM[mode]
 
-block = Block_UI()
+block = Block_UI(mode)
 pygame.mixer.init()
 beep = pygame.mixer.Sound('beep.mp3')
 
@@ -179,6 +179,7 @@ elif mode == 'training_2' or mode == 'standby':
 else:
     prob_set = int(mode)
 
+session_start_time = perf_counter()
 
 if prob_set < 0:
     # number of trials spend on the current block
@@ -186,8 +187,9 @@ if prob_set < 0:
     # percentage of the animal choosing the more advantagous side in the past twenty trials
     last_twenty = collections.deque(20*[0], 20)
 
+
     # trial continues until stopped
-    while session_length > 0:
+    while session_length > 0 and perf_counter() - session_start_time < 2700:
         print(reward_prob)
         # stop the system bring up not responding window
         pygame.event.pump()
@@ -214,14 +216,15 @@ if prob_set < 0:
         beep.play()
         sleep(0.1)
         beep.stop()
-        block.draw()
+        
 
         start_time = perf_counter()
         choice = -1
-        in_trial = True
         choice_made = False
         trial_movement = 0
         print('trial starts')
+        block.draw()
+        in_trial = True
         # Trial continues until the mouse made a choice or timeout
         while in_trial:
             if choice != -1:
@@ -237,7 +240,6 @@ if prob_set < 0:
                     rewarded.append(0)
                 # chosen the advantageous side
                 last_twenty.append(int(adv == choice))
-                block.reset()
                 in_trial = False
                 break
             block.draw()
@@ -248,11 +250,10 @@ if prob_set < 0:
                 moving_speed.append(-1)
                 last_twenty.append(0)
                 in_trial = False
-                block.reset()
-                block.window.fill(mice_ui.BG_COLOR)
-                pygame.display.flip()
                 break
         block.reset()
+        block.window.fill(mice_ui.BG_COLOR)
+        pygame.display.flip()
         # store trial data
         trial_indices.append(trial_ind)
         leftP.append(reward_prob[0])
@@ -303,5 +304,7 @@ queries.upload_session(mouse_code, today, stage=mode, prob_set=prob_set, choices
                        trial_indices=trial_indices, leftP=leftP, rightP=rightP, reaction_time=reaction_time, moving_speed=moving_speed, cursor=cursor)
 
 
-
 db.commit()
+
+print('session time: %f' % (perf_counter() - session_start_time) / 60)
+

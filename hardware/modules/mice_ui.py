@@ -1,7 +1,7 @@
 import pygame
 from screeninfo import get_monitors
 
-TICK_TO_DISTANCE = 10
+TICK_TO_DISTANCE = 20
 WHITE = (255,255,255)
 BLACK = (0,0,0)
 RED = (255,0,0)
@@ -12,7 +12,7 @@ BG_COLOR = BLACK
 BLOCK_COLOR = GREEN
 
 class Block_UI:
-    def __init__(self) -> None:
+    def __init__(self, mode) -> None:
         pygame.init()
         # monitor
         self.m = get_monitors()[1]
@@ -25,10 +25,16 @@ class Block_UI:
         self.y_pos = self.m.height / 2 - self.rec_height / 2
         self.rect = pygame.Rect(self.x_pos, self.y_pos, self.rec_width, self.rec_height)
 
+        if 'motor' in mode:
+            self.distance = 25
+            print('motor distance')
+        else:
+            self.distance = 15
+
     # move the block left a tick
     def update_left(self, in_trial):
         if in_trial:
-            self.x_pos = self.x_pos - TICK_TO_DISTANCE
+            self.x_pos = self.x_pos - self.distance
             if self.x_pos < 0 - self.rec_width:
                 self.window.fill((BG_COLOR))
                 pygame.display.flip()
@@ -41,7 +47,7 @@ class Block_UI:
         
     def update_right(self, in_trial):
         if in_trial:
-            self.x_pos = self.x_pos + TICK_TO_DISTANCE
+            self.x_pos = self.x_pos + self.distance
             if self.x_pos > self.m.width:
                 self.window.fill((BG_COLOR))
                 pygame.display.flip()
