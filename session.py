@@ -306,5 +306,5 @@ queries.upload_session(mouse_code, today, stage=mode, prob_set=prob_set, choices
 
 db.commit()
 
-print('session time: %f' % (perf_counter() - session_start_time) / 60)
+print('session time: %f' % ((perf_counter() - session_start_time) / 60))
 
