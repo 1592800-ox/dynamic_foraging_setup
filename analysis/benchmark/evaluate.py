@@ -2,6 +2,7 @@
 
 import enum
 from re import L
+from turtle import st
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -47,8 +48,9 @@ def get_performance_new(choices: np.ndarray, leftP: np.ndarray, mode: str):
 
 def tolerant_mean(arrs):
     lens = [len(i) for i in arrs]
-    lens_cutoff = int(np.mean(lens) + np.std(lens))
-    # cut off trials indices that are not reached by half the sessions
+    lens_sorted = np.sort(lens)
+    lens_cutoff = int(np.percentile(lens_sorted, 90))
+    # cut off trials indices that are not reached by 90% the sessions
     for ind, l in enumerate(arrs):
         if len(l) > lens_cutoff:
             arrs[ind] = l[:lens_cutoff]
@@ -70,12 +72,15 @@ def plot_nan_percent(nan_percents: np.ndarray, title: str):
     plt.tight_layout()
     plt.rcParams.update({'font.size': 18})
     fig, ax = plt.subplots(figsize=(5,5))
+    x_axis = np.arange(start=0, stop=len(x), step=100)
     ax.plot(x, y, label='performance mean')
     ax.plot(x, lower, color='tab:blue', alpha=0.1)
     ax.plot(x, upper, color='tab:blue', alpha=0.1)
     ax.fill_between(x, lower, upper, alpha=0.2)
     ax.set_xlabel('trial index')
     ax.set_ylabel('nan percentage')
+    ax.set_xticks(x_axis)
+    # TODO set x axis accuracy
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
     ax.set_title(title)

@@ -1,8 +1,8 @@
 from analysis.benchmark.evaluate import get_performance_new
 
 MOTOR_THRESHOLD = 0.8
-TRAINING_1_THRESHOLD = 0.6
-TRAINING_2_THRESHOLD = 0.3
+TRAINING_1_THRESHOLD = 0.63
+TRAINING_2_THRESHOLD = 0.65
 
 def benchmark(stage, choices, leftP):
     perf = get_performance_new(choices=choices, leftP=leftP, mode=stage)
