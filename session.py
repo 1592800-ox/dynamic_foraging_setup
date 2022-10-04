@@ -1,3 +1,4 @@
+from audioop import getsample
 import collections
 import os
 from datetime import date
@@ -9,11 +10,12 @@ import mysql.connector
 import numpy as np
 import pandas as pd
 import pygame
+from sympy import evaluate
 import RPi.GPIO as GPIO
 
 import hardware.modules.mice_ui as mice_ui
 from analysis.benchmark.benchmark import benchmark
-from analysis.benchmark.evaluate import get_performance_new
+from analysis.benchmark.evaluate import get_performance_new, get_switches
 from analysis.monitor import monitor_train
 from database import queries
 from database.queries import upload_session
@@ -305,4 +307,5 @@ queries.upload_session(mouse_code, today, stage=mode, prob_set=prob_set, choices
 db.commit()
 
 print('session time: %f' % ((perf_counter() - session_start_time) / 60))
+print(f'switches: {get_switches(leftP)}')
 
