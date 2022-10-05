@@ -186,7 +186,7 @@ if prob_set < 0:
     # number of trials spend on the current block
     curr_block = 0
     # percentage of the animal choosing the more advantagous side in the past twenty trials
-    last_ten = collections.deque(10*[0], 10)
+    last_twenty = collections.deque(20*[0], 20)
 
     # trial continues until stopped
     while session_length > 0 and perf_counter() - session_start_time < 2700:
@@ -197,14 +197,12 @@ if prob_set < 0:
         sleep(np.random.randint(0, 2))
 
         # block switch in trianing mode
-        if mode != 'motor_training' and last_ten.count(1) > 6 and curr_block > 40:
-            print(curr_block)
+        if mode != 'motor_training' and curr_block > 70 and last_twenty.count(1) > 15:
             print('switch prob')
             curr_block = 0
             adv = abs(1 - adv)
             reward_prob[adv] = np.random.uniform(low=0.85, high=0.95, size=1)
             reward_prob[abs(1-adv)] = 1 - reward_prob[adv]
-            last_ten = collections.deque(10*[0], 10)
 
         # next trial doesn't start until the animal stop moving the wheel for 0.5s
         while True:
@@ -239,7 +237,7 @@ if prob_set < 0:
                 else:
                     rewarded.append(0)
                 # chosen the advantageous side
-                last_ten.append(int(adv == choice))
+                last_twenty.append(int(adv == choice))
                 in_trial = False
                 break
             block.draw()
@@ -248,7 +246,7 @@ if prob_set < 0:
                 rewarded.append(0)
                 reaction_time.append(-1)
                 moving_speed.append(-1)
-                last_ten.append(0)
+                last_twenty.append(0)
                 in_trial = False
                 break
         block.reset()
