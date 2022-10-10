@@ -10,9 +10,9 @@ class Pump:
         GPIO.output(self.pin, 1)
         if 'motor' in mode:
             print('motor reward')
-            sleep(0.2)
+            sleep(0.1)
         else:
-            sleep(0.25)
+            sleep(0.15)
         GPIO.output(self.pin, 0)
 
     def open_valve(self):

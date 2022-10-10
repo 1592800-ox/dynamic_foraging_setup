@@ -29,7 +29,7 @@ class Block_UI:
             self.distance = 25
             print('motor distance')
         else:
-            self.distance = 15
+            self.distance = 20
 
     # move the block left a tick
     def update_left(self, in_trial):
