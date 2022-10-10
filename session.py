@@ -8,6 +8,7 @@ from time import perf_counter, sleep
 import matplotlib.pyplot as plt
 import mysql.connector
 import numpy as np
+from numpy.random import RandomState
 import pandas as pd
 import pygame
 from sympy import evaluate
@@ -180,103 +181,111 @@ elif mode == 'training_2' or mode == 'standby':
 else:
     prob_set = int(mode)
 
+rs = RandomState(prob_set)
+if prob_set >= 0:
+    reward_prob[adv] = rs.uniform(low=0.85, high=0.9, size=1)
+    reward_prob[abs(1-adv)] = 1 - reward_prob[adv]
+
 session_start_time = perf_counter()
 
-if prob_set < 0:
-    # number of trials spend on the current block
-    curr_block = 0
-    # percentage of the animal choosing the more advantagous side in the past twenty trials
-    last_twenty = collections.deque(20*[0], 20)
+# number of trials spend on the current block
+curr_block = 0
+# percentage of the animal choosing the more advantagous side in the past twenty trials
+last_twenty = collections.deque(20*[0], 20)
 
-    # trial continues until stopped
-    while session_length > 0 and perf_counter() - session_start_time < 2700:
-        print(reward_prob)
-        # stop the system bring up not responding window
-        pygame.event.pump()
-        # random trial interval
-        sleep(np.random.randint(0, 2))
+# trial continues until stopped
+while session_length > 0 and perf_counter() - session_start_time < 2700:
+    print(reward_prob)
+    # stop the system bring up not responding window
+    pygame.event.pump()
+    # random trial interval
+    sleep(np.random.randint(0, 1))
 
-        # block switch in trianing mode
-        if mode != 'motor_training' and curr_block > 70 and last_twenty.count(1) > 15:
-            print('switch prob')
-            curr_block = 0
-            adv = abs(1 - adv)
-            reward_prob[adv] = np.random.uniform(low=0.85, high=0.95, size=1)
-            reward_prob[abs(1-adv)] = 1 - reward_prob[adv]
-
-        # next trial doesn't start until the animal stop moving the wheel for 0.5s
-        while True:
-            movement = 0
-            sleep(0.5)
-            if movement < 5:
-                break
-
-        beep.play()
-        sleep(0.1)
-        beep.stop()
-        
-
-        start_time = perf_counter()
-        choice = -1
-        choice_made = False
-        trial_movement = 0
-        print('trial starts')
-        block.draw()
-        in_trial = True
-        # Trial continues until the mouse made a choice or timeout
-        while in_trial:
-            if choice != -1:
-                print('choice made')
-                reaction_time.append(perf_counter() - start_time)
-                moving_speed.append(trial_movement / (perf_counter() - start_time))
-                if np.random.binomial(1, reward_prob[choice]):
-                    # if given reward
-                    pump.send_reward(mode)
-                    rewarded.append(1)
-                    print('rewarded')
-                else:
-                    rewarded.append(0)
-                # chosen the advantageous side
-                last_twenty.append(int(adv == choice))
-                in_trial = False
-                break
-            block.draw()
-            if perf_counter() - start_time > TIME_OUT:
-                # no reward for nan trials either
-                rewarded.append(0)
-                reaction_time.append(-1)
-                moving_speed.append(-1)
-                last_twenty.append(0)
-                in_trial = False
-                break
-        block.reset()
-        block.window.fill(mice_ui.BG_COLOR)
-        pygame.display.flip()
-        # store trial data
-        trial_indices.append(trial_ind)
-        leftP.append(reward_prob[0])
-        rightP.append(reward_prob[1])
-        choices.append(choice)
-        # next trial
-        trial_ind += 1
-        curr_block += 1
-        print(trial_ind)
-
-        if prob_set > -3:
-            monitor_train(left_p=leftP, axes=axes, trial_indices=trial_indices,
-                          choices=choices, rewarded=rewarded)
-            plt.show(block=False)
-            plt.pause(0.1)
+    # block switch in trianing mode
+    if prob_set > -3 and curr_block > 70 and last_twenty.count(1) > 15:
+        print('switch prob')
+        curr_block = 0
+        adv = abs(1 - adv)
+        if prob_set == -2:
+            reward_prob[adv] = np.random.uniform(low=0.9, high=0.95)
+        elif prob_set == -1:
+            reward_prob[adv] = np.random.uniform(low=0.8, high=0.85)
         else:
-            print(get_performance_new(np.array(choices), np.array(leftP), mode))
+            reward_prob[adv] = rs.uniform(low=0.8, high=0.85)
+        reward_prob[abs(1-adv)] = 1 - reward_prob[adv]
 
-        session_length -= 1
+    # next trial doesn't start until the animal stop moving the wheel for 0.5s
+    while True:
+        movement = 0
+        sleep(0.5)
+        if movement < 10:
+            break
 
-        pygame.mixer.quit()
-        pygame.mixer.init(buffer=4096)
-        beep = pygame.mixer.Sound('beep.mp3')
-else:
-    pass
+    beep.play()
+    sleep(0.1)
+    beep.stop()
+    
+
+    start_time = perf_counter()
+    choice = -1
+    choice_made = False
+    trial_movement = 0
+    print('trial starts')
+    block.draw()
+    in_trial = True
+    # Trial continues until the mouse made a choice or timeout
+    while in_trial:
+        if choice != -1:
+            print('choice made')
+            reaction_time.append(perf_counter() - start_time)
+            moving_speed.append(trial_movement / (perf_counter() - start_time))
+            if np.random.binomial(1, reward_prob[choice]):
+                # if given reward
+                pump.send_reward(mode)
+                rewarded.append(1)
+                print('rewarded')
+            else:
+                rewarded.append(0)
+            # chosen the advantageous side
+            last_twenty.append(int(adv == choice))
+            in_trial = False
+            break
+        block.draw()
+        if perf_counter() - start_time > TIME_OUT:
+            # no reward for nan trials either
+            rewarded.append(0)
+            reaction_time.append(-1)
+            moving_speed.append(-1)
+            last_twenty.append(0)
+            in_trial = False
+            break
+    block.reset()
+    block.window.fill(mice_ui.BG_COLOR)
+    pygame.display.flip()
+    # store trial data
+    trial_indices.append(trial_ind)
+    leftP.append(reward_prob[0])
+    rightP.append(reward_prob[1])
+    choices.append(choice)
+    # next trial
+    trial_ind += 1
+    curr_block += 1
+    print(trial_ind)
+
+    if prob_set > -3:
+        monitor_train(left_p=leftP, axes=axes, trial_indices=trial_indices,
+                        choices=choices, rewarded=rewarded)
+        plt.show(block=False)
+        plt.pause(0.1)
+    else:
+        print(get_performance_new(np.array(choices), np.array(leftP), mode))
+
+    session_length -= 1
+
+    pygame.mixer.quit()
+    pygame.mixer.init(buffer=4096)
+    beep = pygame.mixer.Sound('beep.mp3')
+
 
 
 # start data collection when a trained animal is old enough
