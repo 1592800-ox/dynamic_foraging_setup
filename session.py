@@ -50,7 +50,7 @@ trial_movement = 0
 # Control a mice session with loaded probability file
 IN_A = 4
 IN_B = 5
-OUT_REWARD = 26
+OUT_REWARD = 6
 
 # seconds before a trial times out and we get a NaN trial
 TIME_OUT = 7
@@ -181,8 +181,9 @@ elif mode == 'training_2' or mode == 'standby':
 else:
     prob_set = int(mode)
 
-rs = RandomState(prob_set)
+rs = RandomState()
 if prob_set >= 0:
+    rs.seed(prob_set)
     reward_prob[adv] = rs.uniform(low=0.85, high=0.9, size=1)
     reward_prob[abs(1-adv)] = 1 - reward_prob[adv]
 
@@ -202,7 +203,7 @@ while session_length > 0 and perf_counter() - session_start_time < 2700:
     sleep(np.random.randint(0, 1))
 
     # block switch in trianing mode
-    if prob_set > -3 and curr_block > 70 and last_twenty.count(1) > 15:
+    if prob_set > -3 and curr_block >= 60 and (curr_block-60) % 40== 0 and last_twenty.count(1) > 15:
         print('switch prob')
         curr_block = 0
         adv = abs(1 - adv)
@@ -216,6 +217,7 @@ while session_length > 0 and perf_counter() - session_start_time < 2700:
 
     # next trial doesn't start until the animal stop moving the wheel for 0.5s
     while True:
+        print('stuck here')
         movement = 0
         sleep(0.5)
         if movement < 10:
@@ -287,7 +289,7 @@ while session_length > 0 and perf_counter() - session_start_time < 2700:
     beep = pygame.mixer.Sound('beep.mp3')
 
 
-
+# TODO clean up logic here
 # start data collection when a trained animal is old enough
 if mode == 'standby':
     age = queries.get_age(mouse_code=mouse_code, cursor=cursor)
