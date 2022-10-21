@@ -168,12 +168,12 @@ if mode == 'motor_training':
     reward_prob[0] = MOTOR_REWARD
     reward_prob[1] = MOTOR_REWARD
     prob_set = -3
-elif mode == 'training_1':
+elif 'training_1' in mode:
     adv = np.random.binomial(1, 0.5)
     reward_prob[adv] = np.random.uniform(low=0.9, high=0.95, size=1)
     reward_prob[abs(1-adv)] = 1 - reward_prob[adv]
     prob_set = -2
-elif mode == 'training_2' or mode == 'standby':
+elif 'training_2' in mode:
     adv = np.random.binomial(1, 0.5)
     reward_prob[adv] = np.random.uniform(low=0.85, high=0.9, size=1)
     reward_prob[abs(1-adv)] = 1 - reward_prob[adv]
@@ -182,6 +182,7 @@ else:
     prob_set = int(mode)
 
 rs = RandomState()
+
 if prob_set >= 0:
     rs.seed(prob_set)
     reward_prob[adv] = rs.uniform(low=0.85, high=0.9, size=1)
@@ -201,9 +202,13 @@ while session_length > 0 and perf_counter() - session_start_time < 2700:
     pygame.event.pump()
     # random trial interval
     sleep(np.random.randint(0, 1))
+    if prob_set >= 0:
+        block_length = rs.randint(low=50, high=80)
+    else:
+        block_length = np.random.randint(low=50, high=80)
 
     # block switch in trianing mode
-    if prob_set > -3 and curr_block >= 60 and (curr_block-60) % 40 == 0 and last_twenty.count(1) > 15:
+    if prob_set > -3 and curr_block >= block_length and (curr_block-60) % 20 == 0 and last_twenty.count(1) > 15:
         print('switch prob')
         curr_block = 0
         adv = abs(1 - adv)
@@ -288,15 +293,14 @@ while session_length > 0 and perf_counter() - session_start_time < 2700:
     beep = pygame.mixer.Sound('beep.mp3')
 
 
-# TODO clean up logic here
-# start data collection when a trained animal is old enough
-
 if prob_set < 0:
     passed = benchmark(stage=mode, choices=np.array(
         choices), leftP=np.array(leftP))
 
     if passed:
         queries.next_stage(mouse_code, cursor=cursor, stage=mode)
+    else:
+        queries.backtrack(mouse_code, cursor=cursor, stage=mode)
 
 if prob_set >= 0:
     queries.next_set(mouse_code, prob_set, cursor)
