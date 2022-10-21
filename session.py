@@ -14,15 +14,15 @@ import pygame
 from sympy import evaluate
 import RPi.GPIO as GPIO
 
-import hardware.modules.mice_ui as mice_ui
+import hardware.mice_ui as mice_ui
 from analysis.benchmark.benchmark import benchmark
 from analysis.benchmark.evaluate import get_performance_new, get_switches
 from analysis.monitor import monitor_train
 from database import queries
 from database.queries import upload_session
-from hardware.modules.mice_ui import Block_UI
-from hardware.modules.pump_ctrl import Pump
-from hardware.modules.setup import setup
+from hardware.mice_ui import Block_UI
+from hardware.pump_ctrl import Pump
+from hardware.setup import setup
 
 # TODO sort out the variables
 # variables storing trial data
@@ -59,7 +59,7 @@ in_trial = False
 # enure only one choice is stored
 choice_made = False
 TRIAL_NUM = {'motor_training': 300, 'training_1': 400,
-             'training_2': 450, 'standby': 450}
+             'training_2': 450}
 
 prob_set = -3
 
@@ -203,7 +203,7 @@ while session_length > 0 and perf_counter() - session_start_time < 2700:
     sleep(np.random.randint(0, 1))
 
     # block switch in trianing mode
-    if prob_set > -3 and curr_block >= 60 and (curr_block-60) % 40== 0 and last_twenty.count(1) > 15:
+    if prob_set > -3 and curr_block >= 60 and (curr_block-60) % 40 == 0 and last_twenty.count(1) > 15:
         print('switch prob')
         curr_block = 0
         adv = abs(1 - adv)
@@ -226,7 +226,6 @@ while session_length > 0 and perf_counter() - session_start_time < 2700:
     beep.play()
     sleep(0.1)
     beep.stop()
-    
 
     start_time = perf_counter()
     choice = -1
@@ -276,7 +275,7 @@ while session_length > 0 and perf_counter() - session_start_time < 2700:
 
     if prob_set > -3:
         monitor_train(left_p=leftP, axes=axes, trial_indices=trial_indices,
-                        choices=choices, rewarded=rewarded)
+                      choices=choices, rewarded=rewarded)
         plt.show(block=False)
         plt.pause(0.1)
     else:
@@ -291,16 +290,10 @@ while session_length > 0 and perf_counter() - session_start_time < 2700:
 
 # TODO clean up logic here
 # start data collection when a trained animal is old enough
-if mode == 'standby':
-    age = queries.get_age(mouse_code=mouse_code, cursor=cursor)
-    print(age)
 
-    if age > 90:
-        queries.start_collect(mouse_code=mouse_code, cursor=cursor)
-
-
-if prob_set < 0 and mode != 'standby':
-    passed = benchmark(stage=mode, choices=np.array(choices), leftP=np.array(leftP))
+if prob_set < 0:
+    passed = benchmark(stage=mode, choices=np.array(
+        choices), leftP=np.array(leftP))
 
     if passed:
         queries.next_stage(mouse_code, cursor=cursor, stage=mode)
@@ -317,4 +310,3 @@ db.commit()
 
 print('session time: %f' % ((perf_counter() - session_start_time) / 60))
 print(f'switches: {get_switches(leftP)}')
-

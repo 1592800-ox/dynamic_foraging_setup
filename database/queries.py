@@ -119,8 +119,10 @@ def next_stage(mouse_code: str, cursor: CursorBase, stage=None):
     if stage == None:
         stage = get_stage(mouse_code, cursor)
     curr_stage = stages.index(stage)
+    # at training 1 stage
     if curr_stage == len(stages) - 1:
-        print('already at final stage')
+        query=start_collect(mouse_code, cursor)
+        cursor.execute(query)
         return False
     next_stage = stages[curr_stage + 1]
     query = '''
