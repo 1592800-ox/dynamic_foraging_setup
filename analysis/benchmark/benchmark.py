@@ -6,6 +6,7 @@ TRAINING_2_THRESHOLD = 0.65
 
 def benchmark(stage, choices, leftP):
     perf = get_performance_new(choices=choices, leftP=leftP, mode=stage)
+    print(f'performance: {perf}')
 
     if stage == 'motor_training':
         if perf > MOTOR_THRESHOLD:

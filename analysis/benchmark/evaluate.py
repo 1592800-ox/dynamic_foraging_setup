@@ -43,7 +43,9 @@ def get_performance_new(choices: np.ndarray, leftP: np.ndarray, mode: str):
     chose_right = np.array(choices == 1, dtype=bool) 
     right_adv = np.array(leftP < 0.5, dtype=bool)
     adv = np.logical_and(chose_right, right_adv)
-    return float(sum(adv)) / float(len(choices)) + get_switches(leftP)
+    switches = get_switches(leftP) / 10.0
+    adv_percent = float(sum(adv)) / float(len(choices))
+    return adv_percent + switches
 
 
 def tolerant_mean(arrs):
