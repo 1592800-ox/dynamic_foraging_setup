@@ -8,15 +8,15 @@ def benchmark(stage, choices, leftP):
     perf = get_performance_new(choices=choices, leftP=leftP, mode=stage)
     print(f'performance: {perf}')
 
-    if stage == 'motor_training':
+    if 'motor_training' in stage:
         if perf > MOTOR_THRESHOLD:
             return True
     
-    if stage == 'training_1':
+    if 'training_1' in stage:
         if perf > TRAINING_1_THRESHOLD:
             return True
 
-    if stage == 'training_2':
+    if 'training_2' in stage:
         if perf > TRAINING_2_THRESHOLD:
             return True
 
