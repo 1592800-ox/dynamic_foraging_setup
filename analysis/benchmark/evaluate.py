@@ -27,8 +27,11 @@ def get_performance(choices: np.ndarray, leftP: np.ndarray, version: str):
         return float(sum(choices != -1)) / float(len(choices))
     chose_right = np.array(choices == 1, dtype=bool) 
     right_adv = np.array(leftP < 0.5, dtype=bool)
-    adv = np.logical_and(chose_right, right_adv)
-    adv_percent = float(sum(adv)) / float(len(choices))
+    adv_right = np.logical_and(chose_right, right_adv)
+    chose_left = np.array(choices == 0, dtype=bool) 
+    left_adv = np.array(leftP > 0.5, dtype=bool)
+    adv_left = np.logical_and(chose_left, left_adv)
+    adv_percent = float(sum(adv_right) + sum(adv_left)) / float(len(choices))
     switches = get_switches(leftP) / 10.0
     return adv_percent + switches
 
@@ -42,8 +45,13 @@ def get_performance_new(choices: np.ndarray, leftP: np.ndarray, mode: str):
         return float(sum(choices != -1)) / float(len(choices))
     chose_right = np.array(choices == 1, dtype=bool) 
     right_adv = np.array(leftP < 0.5, dtype=bool)
-    adv = np.logical_and(chose_right, right_adv)
-    return float(sum(adv)) / float(len(choices))
+    adv_right = np.logical_and(chose_right, right_adv)
+    chose_left = np.array(choices == 0, dtype=bool) 
+    left_adv = np.array(leftP > 0.5, dtype=bool)
+    adv_left = np.logical_and(chose_left, left_adv)
+    adv_percent = float(sum(adv_right) + sum(adv_left)) / float(len(choices))
+    switches = get_switches(leftP) / 10.0
+    return adv_percent + switches
 
 
 def tolerant_mean(arrs):

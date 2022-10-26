@@ -14,15 +14,15 @@ import pygame
 from sympy import evaluate
 import RPi.GPIO as GPIO
 
-import hardware.modules.mice_ui as mice_ui
+import hardware.mice_ui as mice_ui
 from analysis.benchmark.benchmark import benchmark
 from analysis.benchmark.evaluate import get_performance_new, get_switches
 from analysis.monitor import monitor_train
 from database import queries
 from database.queries import upload_session
-from hardware.modules.mice_ui import Block_UI
-from hardware.modules.pump_ctrl import Pump
-from hardware.modules.setup import setup
+from hardware.mice_ui import Block_UI
+from hardware.pump_ctrl import Pump
+from hardware.setup import setup
 
 # TODO sort out the variables
 # variables storing trial data
@@ -50,7 +50,7 @@ trial_movement = 0
 # Control a mice session with loaded probability file
 IN_A = 4
 IN_B = 5
-OUT_REWARD = 26
+OUT_REWARD = 6
 
 # seconds before a trial times out and we get a NaN trial
 TIME_OUT = 7
@@ -58,8 +58,8 @@ TIME_OUT = 7
 in_trial = False
 # enure only one choice is stored
 choice_made = False
-TRIAL_NUM = {'motor_training': 300, 'training_1': 400,
-             'training_2': 450, 'standby': 450}
+TRIAL_NUM = {'motor_training': 300, 'training_1': 400, 'training_1_1': 400, 'training_1_2': 400,
+             'training_2': 450, 'training_2_1': 450, 'training_2_1': 450}
 
 prob_set = -3
 
@@ -168,12 +168,12 @@ if mode == 'motor_training':
     reward_prob[0] = MOTOR_REWARD
     reward_prob[1] = MOTOR_REWARD
     prob_set = -3
-elif mode == 'training_1':
+elif 'training_1' in mode:
     adv = np.random.binomial(1, 0.5)
     reward_prob[adv] = np.random.uniform(low=0.9, high=0.95, size=1)
     reward_prob[abs(1-adv)] = 1 - reward_prob[adv]
     prob_set = -2
-elif mode == 'training_2' or mode == 'standby':
+elif 'training_2' in mode:
     adv = np.random.binomial(1, 0.5)
     reward_prob[adv] = np.random.uniform(low=0.85, high=0.9, size=1)
     reward_prob[abs(1-adv)] = 1 - reward_prob[adv]
@@ -181,8 +181,10 @@ elif mode == 'training_2' or mode == 'standby':
 else:
     prob_set = int(mode)
 
-rs = RandomState(prob_set)
+rs = RandomState()
+
 if prob_set >= 0:
+    rs.seed(prob_set)
     reward_prob[adv] = rs.uniform(low=0.85, high=0.9, size=1)
     reward_prob[abs(1-adv)] = 1 - reward_prob[adv]
 
@@ -200,9 +202,13 @@ while session_length > 0 and perf_counter() - session_start_time < 2700:
     pygame.event.pump()
     # random trial interval
     sleep(np.random.randint(0, 1))
+    if prob_set >= 0:
+        block_length = rs.randint(low=50, high=80)
+    else:
+        block_length = np.random.randint(low=50, high=80)
 
     # block switch in trianing mode
-    if prob_set > -3 and curr_block > 70 and last_twenty.count(1) > 15:
+    if prob_set > -3 and curr_block >= block_length and (curr_block-60) % 20 == 0 and last_twenty.count(1) > 15:
         print('switch prob')
         curr_block = 0
         adv = abs(1 - adv)
@@ -216,6 +222,7 @@ while session_length > 0 and perf_counter() - session_start_time < 2700:
 
     # next trial doesn't start until the animal stop moving the wheel for 0.5s
     while True:
+        print('stuck here')
         movement = 0
         sleep(0.5)
         if movement < 10:
@@ -224,7 +231,6 @@ while session_length > 0 and perf_counter() - session_start_time < 2700:
     beep.play()
     sleep(0.1)
     beep.stop()
-    
 
     start_time = perf_counter()
     choice = -1
@@ -274,7 +280,7 @@ while session_length > 0 and perf_counter() - session_start_time < 2700:
 
     if prob_set > -3:
         monitor_train(left_p=leftP, axes=axes, trial_indices=trial_indices,
-                        choices=choices, rewarded=rewarded)
+                      choices=choices, rewarded=rewarded)
         plt.show(block=False)
         plt.pause(0.1)
     else:
@@ -287,21 +293,14 @@ while session_length > 0 and perf_counter() - session_start_time < 2700:
     beep = pygame.mixer.Sound('beep.mp3')
 
 
-
-# start data collection when a trained animal is old enough
-if mode == 'standby':
-    age = queries.get_age(mouse_code=mouse_code, cursor=cursor)
-    print(age)
-
-    if age > 90:
-        queries.start_collect(mouse_code=mouse_code, cursor=cursor)
-
-
-if prob_set < 0 and mode != 'standby':
-    passed = benchmark(stage=mode, choices=np.array(choices), leftP=np.array(leftP))
+if prob_set < 0:
+    passed = benchmark(stage=mode, choices=np.array(
+        choices), leftP=np.array(leftP))
 
     if passed:
         queries.next_stage(mouse_code, cursor=cursor, stage=mode)
+    else:
+        queries.backtrack(mouse_code, cursor=cursor, stage=mode)
 
 if prob_set >= 0:
     queries.next_set(mouse_code, prob_set, cursor)
@@ -315,4 +314,3 @@ db.commit()
 
 print('session time: %f' % ((perf_counter() - session_start_time) / 60))
 print(f'switches: {get_switches(leftP)}')
-

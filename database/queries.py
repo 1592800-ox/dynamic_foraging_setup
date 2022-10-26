@@ -10,7 +10,7 @@ from numpy.typing import NDArray
 import pandas as pd
 from mysql.connector.cursor import CursorBase
 
-stages = ['motor_training', 'training_1', 'training_2', 'standby']
+stages = ['motor_training', 'motor_training_1', 'training_1', 'training_1_1', 'training_1_2', 'training_2', 'training_2_1', 'training_2_2']
 
 # initializes the tables
 def init(cursor: CursorBase):
@@ -119,8 +119,10 @@ def next_stage(mouse_code: str, cursor: CursorBase, stage=None):
     if stage == None:
         stage = get_stage(mouse_code, cursor)
     curr_stage = stages.index(stage)
+    # at training 1 stage
     if curr_stage == len(stages) - 1:
-        print('already at final stage')
+        query=start_collect(mouse_code, cursor)
+        cursor.execute(query)
         return False
     next_stage = stages[curr_stage + 1]
     query = '''
@@ -129,6 +131,21 @@ def next_stage(mouse_code: str, cursor: CursorBase, stage=None):
         WHERE mouse_code = '%s'
         ''' % (next_stage, mouse_code)
     cursor.execute(query)
+
+def backtrack(mouse_code: str, cursor: CursorBase, stage=None):
+    if 'training_1' in stage:
+        next_stage = 'training_1'
+    elif 'training_2' in stage:
+        next_stage = 'training_2'
+    else:
+        next_stage = 'motor_training'
+    query = '''
+        UPDATE mice
+        SET stage = '%s'
+        WHERE mouse_code = '%s'
+        ''' % (next_stage, mouse_code)
+    cursor.execute(query)
+
 
 def start_collect(mouse_code: str, cursor: CursorBase):
     next_stage = '0'

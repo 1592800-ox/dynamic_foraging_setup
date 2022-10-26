@@ -3,11 +3,11 @@ from hardware.modules.pump_ctrl import Pump
 import RPi.GPIO as GPIO
 
 GPIO.setmode(GPIO.BCM)
-GPIO.setup(26, GPIO.OUT, initial=GPIO.LOW)
+GPIO.setup(6, GPIO.OUT, initial=GPIO.LOW)
 
 
-pump = Pump(26)
+pump = Pump(6)
 
 for i in range(100):
-    pump.send_reward('motor')
+    pump.send_reward('train')
     sleep(0.5)
