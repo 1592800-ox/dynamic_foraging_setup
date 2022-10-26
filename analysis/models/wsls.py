@@ -1,5 +1,5 @@
 # Win stay lose shift model
 
-class Wsls:
+class WSLS:
     def __init__(self) -> None:
         pass
