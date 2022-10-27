@@ -126,7 +126,7 @@ def get_age(mouse_code:str, cursor: CursorBase):
 def set_offset(mouse_code: str, cursor: CursorBase, offset):
     query = '''
         UPDATE mice
-        SET offset = %2.4d
+        SET session_length_offset = %d
         WHERE mouse_code = '%s'
         ''' % (offset, mouse_code)
     cursor.execute(query)
