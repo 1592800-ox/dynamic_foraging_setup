@@ -104,7 +104,9 @@ pump = Pump(OUT_REWARD)
 mouse_code = setup(pump, mice)
 mode = queries.get_stage(mouse_code, cursor)
 
-session_length = TRIAL_NUM[mode]
+session_length_offset = queries.get_offset(mouse_code)
+queries.set_offset(mouse_code, cursor, session_length_offset)
+session_length = TRIAL_NUM[mode] + session_length_offset
 
 block = Block_UI(mode)
 pygame.mixer.init()
@@ -292,6 +294,9 @@ while session_length > 0 and perf_counter() - session_start_time < 2700:
     pygame.mixer.init(buffer=4096)
     beep = pygame.mixer.Sound('beep.mp3')
 
+perf = get_performance_new(choices=choices, leftP=leftP, mode=mode)
+session_time = (perf_counter() - session_start_time) / 60
+
 
 if prob_set < 0:
     passed = benchmark(stage=mode, choices=np.array(
@@ -301,16 +306,17 @@ if prob_set < 0:
         queries.next_stage(mouse_code, cursor=cursor, stage=mode)
     else:
         queries.backtrack(mouse_code, cursor=cursor, stage=mode)
+    
+    if prob_set > -3:
+        queries.set_offset(mouse_code, cursor, session_length_offset)
 
 if prob_set >= 0:
     queries.next_set(mouse_code, prob_set, cursor)
 
-
 queries.upload_session(mouse_code, today, stage=mode, prob_set=prob_set, choices=choices, rewarded=rewarded,
-                       trial_indices=trial_indices, leftP=leftP, rightP=rightP, reaction_time=reaction_time, moving_speed=moving_speed, cursor=cursor)
-
+                       trial_indices=trial_indices, leftP=leftP, rightP=rightP, reaction_time=reaction_time, moving_speed=moving_speed, cursor=cursor, performance=perf, session_time=session_time)
 
 db.commit()
 
-print('session time: %f' % ((perf_counter() - session_start_time) / 60))
+print('session time: %f' % (session_time))
 print(f'switches: {get_switches(leftP)}')

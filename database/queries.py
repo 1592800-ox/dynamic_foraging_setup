@@ -32,7 +32,7 @@ def init(cursor: CursorBase):
         cursor.execute(create_trials)
 
 #------------------------------ UPLOAD DATA --------------------------------------------------#
-def upload_session(mouse_code, date, stage, prob_set: int, choices: NDArray, rewarded: NDArray, trial_indices, leftP, rightP, reaction_time, moving_speed, cursor: CursorBase):
+def upload_session(mouse_code, date, stage, prob_set: int, choices: NDArray, rewarded: NDArray, trial_indices, leftP, rightP, reaction_time, moving_speed, cursor: CursorBase, performance, session_time):
     # TODO add session to sessions
     trial_num = len(trial_indices)
     print(rewarded == 1)
@@ -40,9 +40,9 @@ def upload_session(mouse_code, date, stage, prob_set: int, choices: NDArray, rew
     nan_trial_num = np.sum([choice == -1 for choice in choices])
     
     query = '''
-        INSERT INTO sessions (mouse_code, date, prob_set, trial_num, reward_num, nan_trial_num) VALUES 
+        INSERT INTO sessions (mouse_code, date, prob_set, trial_num, reward_num, nan_trial_num, performance, session_time) VALUES 
         ('%s', '%s', %d, %d, %d, %d)
-        ''' % (mouse_code, date, prob_set, trial_num, reward_num, nan_trial_num)
+        ''' % (mouse_code, date, prob_set, trial_num, reward_num, nan_trial_num, performance, session_time)
     
     cursor.execute(query)
 
@@ -103,6 +103,15 @@ def get_stage(mouse_code: str, cursor: CursorBase):
     cursor.execute(query)
     return cursor.fetchall()[0][0]
 
+def get_offset(mouse_code: str, cursor: CursorBase):
+    query = '''
+        SELECT session_length_offset 
+        FROM mice
+        WHERE mouse_code = '%s';
+        ''' % (mouse_code)
+    cursor.execute(query)
+    return cursor.fetchall()[0][0]
+
 def get_age(mouse_code:str, cursor: CursorBase):
     query = '''
         SELECT date_of_birth 
@@ -113,6 +122,14 @@ def get_age(mouse_code:str, cursor: CursorBase):
     dob = cursor.fetchall()[0][0]
     today = datetime.date.today()
     return (today - dob).days
+
+def set_offset(mouse_code: str, cursor: CursorBase, offset):
+    query = '''
+        UPDATE mice
+        SET offset = %2.4d
+        WHERE mouse_code = '%s'
+        ''' % (offset, mouse_code)
+    cursor.execute(query)
 
 
 def next_stage(mouse_code: str, cursor: CursorBase, stage=None):
