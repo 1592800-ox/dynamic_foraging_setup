@@ -104,9 +104,10 @@ pump = Pump(OUT_REWARD)
 mouse_code = setup(pump, mice)
 mode = queries.get_stage(mouse_code, cursor)
 
-session_length_offset = queries.get_offset(mouse_code)
-queries.set_offset(mouse_code, cursor, session_length_offset)
+session_length_offset = queries.get_offset(mouse_code, cursor)
 session_length = TRIAL_NUM[mode] + session_length_offset
+print(f'session length: {session_length}')
+session_length_org = session_length
 
 block = Block_UI(mode)
 pygame.mixer.init()
@@ -294,9 +295,12 @@ while session_length > 0 and perf_counter() - session_start_time < 2700:
     pygame.mixer.init(buffer=4096)
     beep = pygame.mixer.Sound('beep.mp3')
 
+choices = np.array(choices)
+leftP = np.array(leftP)
+
 perf = get_performance_new(choices=choices, leftP=leftP, mode=mode)
 session_time = (perf_counter() - session_start_time) / 60
-nan_percent = float(np.sum([choice == -1 for choice in choices])) / float(session_length)
+nan_percent = float(np.sum([choice == -1 for choice in choices])) / float(session_length_org)
 
 if prob_set < 0:
     passed = benchmark(stage=mode, choices=np.array(
