@@ -296,7 +296,7 @@ while session_length > 0 and perf_counter() - session_start_time < 2700:
 
 perf = get_performance_new(choices=choices, leftP=leftP, mode=mode)
 session_time = (perf_counter() - session_start_time) / 60
-
+nan_percent = float(np.sum([choice == -1 for choice in choices])) / float(session_length)
 
 if prob_set < 0:
     passed = benchmark(stage=mode, choices=np.array(
@@ -308,13 +308,17 @@ if prob_set < 0:
         queries.backtrack(mouse_code, cursor=cursor, stage=mode)
     
     if prob_set > -3:
+        if session_time < 40 and nan_percent < 0.05:
+            session_length_offset += 20
+        elif session_time > 45 and nan_percent > 0.1:
+            session_length_offset -= 20
         queries.set_offset(mouse_code, cursor, session_length_offset)
 
 if prob_set >= 0:
     queries.next_set(mouse_code, prob_set, cursor)
 
 queries.upload_session(mouse_code, today, stage=mode, prob_set=prob_set, choices=choices, rewarded=rewarded,
-                       trial_indices=trial_indices, leftP=leftP, rightP=rightP, reaction_time=reaction_time, moving_speed=moving_speed, cursor=cursor, performance=perf, session_time=session_time)
+                       trial_indices=trial_indices, leftP=leftP, rightP=rightP, reaction_time=reaction_time, moving_speed=moving_speed, cursor=cursor, performance=perf, session_time=session_time, nan_percent=nan_percent)
 
 db.commit()
 

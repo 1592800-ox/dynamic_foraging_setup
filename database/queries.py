@@ -32,7 +32,7 @@ def init(cursor: CursorBase):
         cursor.execute(create_trials)
 
 #------------------------------ UPLOAD DATA --------------------------------------------------#
-def upload_session(mouse_code, date, stage, prob_set: int, choices: NDArray, rewarded: NDArray, trial_indices, leftP, rightP, reaction_time, moving_speed, cursor: CursorBase, performance, session_time):
+def upload_session(mouse_code, date, stage, prob_set: int, choices: NDArray, rewarded: NDArray, trial_indices, leftP, rightP, reaction_time, moving_speed, cursor: CursorBase, performance, session_time, nan_percent):
     # TODO add session to sessions
     trial_num = len(trial_indices)
     print(rewarded == 1)
@@ -40,9 +40,9 @@ def upload_session(mouse_code, date, stage, prob_set: int, choices: NDArray, rew
     nan_trial_num = np.sum([choice == -1 for choice in choices])
     
     query = '''
-        INSERT INTO sessions (mouse_code, date, prob_set, trial_num, reward_num, nan_trial_num, performance, session_time) VALUES 
-        ('%s', '%s', %d, %d, %d, %d)
-        ''' % (mouse_code, date, prob_set, trial_num, reward_num, nan_trial_num, performance, session_time)
+        INSERT INTO sessions (mouse_code, date, prob_set, trial_num, reward_num, nan_trial_num, performance, session_time, nan_percent) VALUES 
+        ('%s', '%s', %d, %d, %d, %d, %1.4d, %1.4d, %.4d)
+        ''' % (mouse_code, date, prob_set, trial_num, reward_num, nan_trial_num, performance, session_time, nan_percent)
     
     cursor.execute(query)
 
