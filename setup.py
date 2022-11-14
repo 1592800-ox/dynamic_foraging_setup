@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name='DynamicForaging',
-    version='1.0.2',
+    version='1.1.0',
     author='Peiheng',
     author_email='s1948149@ed.ac.uk',
     packages=['analysis', 'analysis.benchmark', 'analysis.models', 'test', 'hardware', 'database', 'test'],

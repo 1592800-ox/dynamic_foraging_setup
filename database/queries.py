@@ -43,7 +43,7 @@ def upload_session(mouse_code, date, stage, prob_set: int, choices: NDArray, rew
 
     query = '''
         INSERT INTO sessions (mouse_code, date, prob_set, trial_num, reward_num, nan_trial_num, performance, session_time, nan_percent) VALUES 
-        ('%s', '%s', %d, %d, %d, %d, %1.4d, %1.4d, %.4d)
+        ('%s', '%s', %d, %d, %d, %d, %f, %f, %f)
         ''' % (mouse_code, date, prob_set, trial_num, reward_num, nan_trial_num, performance, session_time, nan_percent)
 
     cursor.execute(query)
