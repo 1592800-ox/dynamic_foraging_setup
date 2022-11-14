@@ -25,6 +25,12 @@ def get_performance(choices: np.ndarray, leftP: np.ndarray, version: str):
             print('choices and set probability has different lengths')
     if '10' in version:
         return float(sum(choices != -1)) / float(len(choices))
+    if '21' in version:
+        leftP = leftP[:400]
+        choices = choices[:400]
+    else:
+        leftP = leftP[:450]
+        choices = choices[:450]
     chose_right = np.array(choices == 1, dtype=bool) 
     right_adv = np.array(leftP < 0.5, dtype=bool)
     adv_right = np.logical_and(chose_right, right_adv)
@@ -43,6 +49,14 @@ def get_performance_new(choices: np.ndarray, leftP: np.ndarray, mode: str):
             print('choices and set probability has different lengths')
     if 'motor' in mode:
         return float(sum(choices != -1)) / float(len(choices))
+    if 'training_1' in mode:
+        print('training_1 performance')
+        leftP = leftP[:400]
+        choices = choices[:400]
+    else:
+        print('training_2 performance')
+        leftP = leftP[:450]
+        choices = choices[:450]
     chose_right = np.array(choices == 1, dtype=bool) 
     right_adv = np.array(leftP < 0.5, dtype=bool)
     adv_right = np.logical_and(chose_right, right_adv)
