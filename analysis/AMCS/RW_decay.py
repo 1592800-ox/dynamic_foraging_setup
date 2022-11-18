@@ -1,10 +1,10 @@
-# This is the model used in paper stable representation of decision variable
 import pandas as pd
 import numpy as np
 from scipy.stats import binom
 import math
 
 # rascular wagner model with decaying
+# This is the model used in paper stable representation of decision variable
 class RW_dacay:
     def _init_(self):
         self.alpha = 0
@@ -80,7 +80,7 @@ class RW_dacay:
             self.V[real_choice] = self.V[real_choice] + self.alpha * (outcomes[i] - self.V[real_choice])
         
         choice_prob = np.array(choice_prob)
-        choice_prob[choice_prob == 0] = 0.0001
+        choice_prob[choice_prob == 0] = np.finfo(float).eps
         nll = - np.sum(np.log(choice_prob))
 
         return nll
