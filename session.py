@@ -14,15 +14,15 @@ import pygame
 from sympy import evaluate
 import RPi.GPIO as GPIO
 
-import hardware.mice_ui as mice_ui
-from analysis.benchmark.benchmark import benchmark
-from analysis.benchmark.evaluate import get_performance_new, get_switches
-from analysis.monitor import monitor_train
-from database import queries
-from database.queries import upload_session
-from hardware.mice_ui import Block_UI
-from hardware.pump_ctrl import Pump
-from hardware.setup import setup
+from lib.analysis.benchmark.benchmark import benchmark
+from lib.analysis.benchmark.evaluate import get_performance_new, get_switches
+from lib.visualization.monitor import monitor_train
+from lib.database import queries
+from lib.database.queries import upload_session
+from lib.ui.mice_ui import Block_UI, BG_COLOR
+from lib.ui.setup import setup
+from lib.hardware.pump_ctrl import Pump
+
 
 # TODO sort out the variables
 # variables storing trial data
@@ -269,7 +269,7 @@ while session_length > 0 and perf_counter() - session_start_time < 2700:
             in_trial = False
             break
     block.reset()
-    block.window.fill(mice_ui.BG_COLOR)
+    block.window.fill(BG_COLOR)
     pygame.display.flip()
     # store trial data
     trial_indices.append(trial_ind)

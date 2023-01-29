@@ -1,5 +1,5 @@
 import tkinter as tk
-from hardware import pump_ctrl
+from lib.hardware import pump_ctrl
 
 def setup(pump: pump_ctrl.Pump, mice):
     padx = 50
