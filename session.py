@@ -58,7 +58,7 @@ TIME_OUT = 7
 in_trial = False
 # enure only one choice is stored
 choice_made = False
-TRIAL_NUM = {'motor_training': 300, 'training_1': 400, 'training_1_1': 400, 'training_1_2': 400,
+TRIAL_NUM = {'motor_training': 300, 'motor_training_1':300, 'training_1': 400, 'training_1_1': 400, 'training_1_2': 400,
              'training_2': 450, 'training_2_1': 450, 'training_2_1': 450}
 
 prob_set = -3
@@ -165,7 +165,7 @@ GPIO.add_event_detect(IN_A, GPIO.BOTH, callback=quadrature_decode)
 GPIO.add_event_detect(IN_B, GPIO.BOTH, callback=quadrature_decode)
 
 
-if mode == 'motor_training':
+if 'motor_training' in mode:
     print('motor training')
     # reward prob for motor training
     reward_prob[0] = MOTOR_REWARD
@@ -314,7 +314,7 @@ if prob_set < 0:
     if prob_set > -3:
         if session_time < 40 and nan_percent < 0.05:
             session_length_offset += 20
-        elif session_time > 45 and nan_percent > 0.1:
+        elif session_time > 45 or nan_percent > 0.1:
             session_length_offset -= 20
         queries.set_offset(mouse_code, cursor, session_length_offset)
 
