@@ -5,7 +5,7 @@ setup(
     version='1.1.0',
     author='Peiheng',
     author_email='s1948149@ed.ac.uk',
-    packages=['analysis', 'analysis.benchmark', 'analysis.models', 'test', 'hardware', 'database', 'test'],
+    packages=['lib.analysis', 'lib.analysis.benchmark', 'lib.hardware', 'lib.database', 'lib.ui', 'lib.visualization'],
     # description='An awesome package that does something',
     install_requires=[
         "seaborn",

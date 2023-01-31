@@ -58,7 +58,7 @@ TIME_OUT = 7
 in_trial = False
 # enure only one choice is stored
 choice_made = False    
-TRIAL_NUM = {'motor_training': 300, 'motor_training': 300, 'training_1': 400, 'training_1_1': 400, 'training_2': 450, 'training_2_1': 450}
+TRIAL_NUM = {'motor_training': 300, 'motor_training_1': 300, 'training_1': 400, 'training_1_1': 400, 'training_2': 450, 'training_2_1': 450}
 
 prob_set = -3
 

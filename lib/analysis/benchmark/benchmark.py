@@ -1,4 +1,4 @@
-from analysis.benchmark.evaluate import get_performance_new
+from lib.analysis.benchmark.evaluate import get_performance_new
 
 MOTOR_THRESHOLD = 0.8
 TRAINING_1_THRESHOLD = 0.94
