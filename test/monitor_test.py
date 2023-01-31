@@ -2,7 +2,7 @@ from secrets import choice
 import numpy as np
 import matplotlib.pyplot as plt
 
-from analysis.monitor import monitor_train
+from lib.visualization.monitor import monitor_train
 
 trial_indices = np.arange(0, 60, dtype=int)
 leftP_test = [0.1] * 20 + [0.8]*20 + [0.15]*20
