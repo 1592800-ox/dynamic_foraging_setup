@@ -14,13 +14,13 @@ import pygame
 from sympy import evaluate
 import RPi.GPIO as GPIO
 
-from lib.analysis.benchmark.benchmark import benchmark
-from lib.analysis.benchmark.evaluate import get_performance_new, get_switches
+from lib.benchmark.benchmark import benchmark
+from lib.benchmark.evaluate import get_performance_new, get_switches
 from lib.visualization.monitor import monitor_train
 from lib.database import queries
 from lib.database.queries import upload_session
 from lib.ui.mice_ui import Block_UI, BG_COLOR
-from lib.ui.setup import setup
+from lib.ui.menu import initialize_menu
 from lib.hardware.pump_ctrl import Pump
 
 
@@ -58,8 +58,7 @@ TIME_OUT = 7
 in_trial = False
 # enure only one choice is stored
 choice_made = False
-TRIAL_NUM = {'motor_training': 300, 'motor_training': 300, 'training_1': 400, 'training_1_1': 400, 
-             'training_2': 450, 'training_2_1': 450}
+TRIAL_NUM = {'motor_training': 300, 'motor_training': 300, 'training_1': 400, 'training_1_1': 400, 'training_2': 450, 'training_2_1': 450}
 
 prob_set = -3
 
@@ -101,7 +100,7 @@ except Exception:
 
 mice = queries.get_animals(cursor)
 pump = Pump(OUT_REWARD)
-mouse_code = setup(pump, mice)
+mouse_code = initialize_menu(pump, mice)
 mode = queries.get_stage(mouse_code, cursor)
 
 session_length_offset = queries.get_offset(mouse_code, cursor)
