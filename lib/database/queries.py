@@ -116,7 +116,11 @@ def get_offset(mouse_code: str, cursor: CursorBase):
         WHERE mouse_code = '%s';
         ''' % (mouse_code)
     cursor.execute(query)
-    return cursor.fetchall()[0][0]
+    offset = cursor.fetchall()[0][0]
+    if not offset:
+        return 0
+    else:   
+        return offset
 
 
 def get_age(mouse_code: str, cursor: CursorBase):
