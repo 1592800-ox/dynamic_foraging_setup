@@ -25,32 +25,17 @@ from lib.hardware.pump_ctrl import Pump
 
 
 # TODO sort out the variables
-# variables storing trial data
+# variables storing session data
 MOTOR_REWARD = 0.9
 reward_prob = np.array([0.9, 0.9])
-choices = []
-leftP = []
-rightP = []
-trial_indices = []
-rewarded = []
-reaction_time = []
-moving_speed = []
+choices, leftP, rightP, trial_indices, rewarded, reaction_time, moving_speed = [], [], [], [], [], [], []
 
-# choice made in a trial, left is 0 and right is 1
-choice = 0
-# advantageous side, 1 is right, 0 is left
-adv = 0
-# trial index
-trial_ind = 0
-# number of movement in trial interval, used to determine whether the trial should start
-movement = 0
-# number of movement during a trial
-trial_movement = 0
 
-# Control a mice session with loaded probability file
-IN_A = 4                                                                                                                                                                                                                                            
-IN_B = 5
-OUT_REWARD = 6
+# trial state variables (for each trial)
+choice, adv, trial_ind, movement, trial_movement = 0, 0, 0, 0, 0
+
+# GPIO pins
+IN_A, IN_B, OUT_REWARD = 4, 5, 6
 
 # seconds before a trial times out and we get a NaN trial
 TIME_OUT = 7
@@ -58,8 +43,10 @@ TIME_OUT = 7
 in_trial = False
 # enure only one choice is stored
 choice_made = False
+
 TRIAL_NUM = {'motor_training': 300, 'motor_training_1': 300, 'training_1': 400, 'training_1_1': 400, 
              'training_2': 450, 'training_2_1': 450}
+TRIAL_NUM_COLLECTION = 450
 
 prob_set = -3
 
@@ -104,9 +91,12 @@ pump = Pump(OUT_REWARD)
 mouse_code = initialize_menu(pump, mice)
 mode = queries.get_stage(mouse_code, cursor)
 
-session_length_offset = queries.get_offset(mouse_code, cursor)
-session_length = TRIAL_NUM[mode] + session_length_offset
-print(f'session length: {session_length}')
+if mode.isdigit():
+    session_length = TRIAL_NUM_COLLECTION
+else:
+    session_length_offset = queries.get_offset(mouse_code, cursor)
+    session_length = TRIAL_NUM[mode] + session_length_offset
+    print(f'session length: {session_length}')
 session_length_org = session_length
 
 block = Block_UI(mode)
