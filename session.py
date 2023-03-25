@@ -200,7 +200,7 @@ while session_length > 0 and perf_counter() - session_start_time < 2700:
     else:
         block_length = np.random.randint(low=50, high=80)
 
-    # block switch in trianing mode
+    # block switch
     if prob_set > -3 and curr_block >= block_length and (curr_block-60) % 20 == 0 and last_twenty.count(1) > 15:
         print('switch prob')
         curr_block = 0
@@ -210,6 +210,7 @@ while session_length > 0 and perf_counter() - session_start_time < 2700:
         elif prob_set == -1:
             reward_prob[adv] = np.random.uniform(low=0.8, high=0.85)
         else:
+            # data collection mode, switching based on animal's performance
             reward_prob[adv] = rs.uniform(low=0.8, high=0.85)
         reward_prob[abs(1-adv)] = 1 - reward_prob[adv]
 
@@ -301,11 +302,14 @@ if prob_set < 0:
     else:
         queries.backtrack(mouse_code, cursor=cursor, stage=mode)
     
+    # automatically adjust session length for individual differences
     if prob_set > -3:
         if session_time < 40 and nan_percent < 0.05:
             session_length_offset += 20
         elif session_time > 45 or nan_percent > 0.1:
             session_length_offset -= 20
+        # clamp the offset to between -100 and 100
+        session_length_offset = max(-100, min(100, session_length_offset))
         queries.set_offset(mouse_code, cursor, session_length_offset)
 
 if prob_set >= 0:
