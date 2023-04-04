@@ -168,7 +168,7 @@ elif 'training_1' in mode:
     prob_set = -2
 elif 'training_2' in mode:
     adv = np.random.binomial(1, 0.5)
-    reward_prob[adv] = np.random.uniform(low=0.85, high=0.9, size=1)
+    reward_prob[adv] = np.random.uniform(low=0.8, high=0.85, size=1)
     reward_prob[abs(1-adv)] = 1 - reward_prob[adv]
     prob_set = -1
 else:
@@ -178,7 +178,7 @@ rs = RandomState()
 
 if prob_set >= 0:
     rs.seed(prob_set)
-    reward_prob[adv] = rs.uniform(low=0.85, high=0.9, size=1)
+    reward_prob[adv] = rs.uniform(low=0.8, high=0.85, size=1)
     reward_prob[abs(1-adv)] = 1 - reward_prob[adv]
 
 session_start_time = perf_counter()
